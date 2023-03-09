@@ -1,0 +1,24 @@
+{
+  "name": "telegrambotgoogledrive",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@google-cloud/local-auth": "^2.1.1",
+    "@grammyjs/files": "^1.0.4",
+    "@grammyjs/router": "^2.0.0",
+    "axios": "^1.2.3",
+    "dotenv": "^16.0.3",
+    "googleapis": "^110.0.0",
+    "grammy": "^1.13.1",
+    "node-schedule": "^2.1.1",
+    "pg": "^8.8.0"
+  },
+  "description": ""
+}

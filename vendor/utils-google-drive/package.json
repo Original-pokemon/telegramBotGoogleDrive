@@ -1,0 +1,65 @@
+{
+  "name": "utils-google-drive",
+  "version": "5.0.3",
+  "description": "A simple and flexible package for interacting with Google Drive",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "CHANGELOG.md",
+    "LICENSE",
+    "README.md",
+    "test"
+  ],
+  "scripts": {
+    "format": "npx prettier --write \"src/**/*.ts\" \"test/**/*.js\"",
+    "format:check": "npx prettier --check \"src/**/*.ts\" \"test/**/*.js\"",
+    "lint": "npm run lint:src && npm run lint:test",
+    "lint:check": "npm run lint:src:check && npm run lint:test:check",
+    "lint:src": "npx eslint src/ --fix",
+    "lint:src:check": "npx eslint src/",
+    "lint:test": "npx eslint test/ --fix",
+    "lint:test:check": "npx eslint test/",
+    "build": "./scripts/build.sh",
+    "test": "npx vitest run --dir test/",
+    "test:file": "npx vitest run $1",
+    "test:getToken": "./test/getTokenGDrive.js",
+    "docs": "./scripts/generateDocs.sh",
+    "encryptToken": "travis encrypt-file tokenGDrive.json --add",
+    "encryptCreds": "travis encrypt-file credentialsGDrive.json --add"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/curtcommander/utils-google-drive.git"
+  },
+  "keywords": [
+    "google",
+    "drive",
+    "API"
+  ],
+  "author": "Curt Commander",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/curtcommander/utils-google-drive/issues"
+  },
+  "homepage": "https://curtcommander.github.io/utils-google-drive",
+  "dependencies": {
+    "@googleapis/drive": "^3.0.1",
+    "limiter": "^2.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^18.11.3",
+    "@typescript-eslint/eslint-plugin": "^5.42.0",
+    "eslint": "^8.27.0",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-config-standard-with-typescript": "^23.0.0",
+    "eslint-plugin-import": "^2.26.0",
+    "eslint-plugin-n": "^15.5.0",
+    "eslint-plugin-promise": "^6.1.1",
+    "prettier": "2.7.1",
+    "typedoc": "^0.23.18",
+    "typescript": "^4.8.4",
+    "uuid": "^9.0.0",
+    "vitest": "^0.25.0"
+  }
+}
