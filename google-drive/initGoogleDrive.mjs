@@ -28,13 +28,18 @@ async function authorize(auth) {
 
 async function initGoogleDrive(auth) {
   const client = await authorize(auth)
-  console.log('client :>> ', client);
-  client.getFileId({
-    fileName: process.env.MAIN_FOLDER_NAME
-  }).catch(async () => {
+  try {
+
+    await client.getFileId({
+      fileName: process.env.MAIN_FOLDER_NAME
+    })
+
+    return client
+  } catch {
     const resMainFolder = await client.makeFolder({ folderName: process.env.MAIN_FOLDER_NAME })
     console.log('Success created MainFolder:', resMainFolder)
-  })
+    return await initGoogleDrive(auth)
+  }
 }
 
 export {
