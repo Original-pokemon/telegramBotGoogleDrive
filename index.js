@@ -53,9 +53,7 @@ initBase(new GroupRepository()).then(async () => {
   initGoogleDrive({
     credentials: './credentials.json',
     token: './token.json'
-  }).then((client) => {
-    const utilsGDrive = client
-
+  }).then((utilsGDrive) => {
     const bot = new Bot(process.env.BOT_TOKEN)
 
     bot.api.config.use(hydrateFiles(bot.token))
