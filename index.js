@@ -1,9 +1,9 @@
 import dotenv from 'dotenv'
 import { Bot, session, GrammyError, HttpError } from 'grammy'
 import { Router } from '@grammyjs/router'
-import { UtilsGDrive } from './vendor/utils-google-drive/dist/index.js'
 import { hydrateFiles } from '@grammyjs/files'
 import * as schedule from 'node-schedule'
+import { initGoogleDrive } from './google-drive/initGoogleDrive.mjs'
 
 dotenv.config()
 
@@ -13,13 +13,8 @@ const bot = new Bot(config.BOT_TOKEN)
 
 bot.api.config.use(hydrateFiles(bot.token))
 
-const utilsGDrive = new UtilsGDrive({
-  pathCredentials: './credentials.json',
-  pathToken: './token.json',
-})
-
 const router = new Router((ctx) => ctx.session.scene)
-
+let utilsGDrive
 bot.use(
   session({
     initial: () => ({
@@ -143,18 +138,9 @@ bot.catch((err) => {
 });
 
 initBase(new GroupRepository()).then(() => {
-  utilsGDrive.getFileId({
-    fileName: process.env.MAIN_FOLDER_NAME
-  }).catch(async (err) => {
-
-    const errTemplate = `No files found matching identifiers specified: ${process.env.MAIN_FOLDER_NAME}.`
-
-    if (err.message == errTemplate) {
-      const resMainFolder = await utilsGDrive.makeFolder({ folderName: process.env.MAIN_FOLDER_NAME })
-      console.log('Success created MainFolder:', resMainFolder)
-    }
-
-
+  utilsGDrive = initGoogleDrive({
+    credentials: './credentials.json',
+    token: './token.json'
   }).then(() => {
     bot.start()
     console.log('Bot started')
