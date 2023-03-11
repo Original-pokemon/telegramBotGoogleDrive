@@ -75,7 +75,7 @@ function getPhotoAnswer() {
         await ctx.reply(questions[answers.length].Text)
       }
     } catch (err) {
-      console.error('user.service > getPhotoAnswer' + err)
+      console.error('user.service > getPhotoAnswer ' + err)
     }
   }
 }
@@ -102,7 +102,7 @@ function showPhotos() {
         reply_markup: new InlineKeyboard().text('Отправить', `sendPhotos`),
       })
     } catch (err) {
-      console.error('user.service > showPhotos' + err)
+      console.error('user.service > showPhotos ' + err)
     }
   }
 }
@@ -122,7 +122,7 @@ function editPhotoPanel() {
       ctx.session.customData = answersIndex
       await ctx.reply('Отправьте новое фото: ' + photo.fileName)
     } catch (err) {
-      console.error('user.service > editPhoto' + err)
+      console.error('user.service > editPhoto ' + err)
     }
   }
 }
@@ -142,7 +142,7 @@ function editPhoto() {
       photo.urlFile = file.getUrl()
       await sendEndMsg(ctx)
     } catch (err) {
-      console.error('user.service > editPhoto' + err)
+      console.error('user.service > editPhoto ' + err)
     }
   }
 }
@@ -177,7 +177,7 @@ function saveToGoogle(GoogleRepository) {
       ctx.session.photo = []
       ctx.session.scene = ''
     } catch (err) {
-      console.error('user.service > editPhoto' + err)
+      console.error('user.service > saveToGoogle ' + err)
     }
   }
 }
