@@ -13,6 +13,6 @@ export function userRoute(
   botInstance.callbackQuery(/editPhoto_\d+/, editPhotoPanel)
   botInstance.callbackQuery('sendPhotos', saveToGoogle)
 
-  router.route('send_photo', getPhoto)
+  router.route('sending_photo', getPhoto)
   router.route('edit_photo', editPhoto)
 }

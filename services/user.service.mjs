@@ -23,9 +23,7 @@ function userPanel(QuestionRepository) {
       const questions = await QuestionRepository.getQuestions(group)
       ctx.session.questions = questions
       ctx.session.customData = []
-      ctx.session.scene = 'send_photo'
-
-      ctx.editMessageText(ctx.session.questions[0].Text)
+      ctx.session.scene = 'sending_photo'
     } catch (err) {
       if (err == `TypeError: Cannot read properties of undefined (reading 'Text')`) {
         console.error('В базе нету вопросов')
