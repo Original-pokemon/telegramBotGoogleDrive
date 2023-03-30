@@ -30,12 +30,26 @@ function questionProfile(QuestionRepository) {
   return async (ctx) => {
     const id = ctx.update.callback_query.data.split('_')[1]
     const question = await QuestionRepository.getQuestion(id)
-    const questionGroup = question.Group === 'azs' ? 'Для всех азс' : 'Для азс с магазином'
+    let questionGroup
+
+    switch (question.Group) {
+      case 'azs':
+        questionGroup = 'Для киосков'
+        break
+      case 'azsWithStore':
+        questionGroup = 'Для АЗС с магазином'
+        break
+      case 'all':
+        questionGroup = 'Для всех АЗС'
+        break
+    }
+
     await ctx.editMessageText(
       `Вопрос №${id}\n` +
       `Название вопроса: ${question.Name}\n` +
       `Текст вопроса: ${question.Text}\n` +
-      `Для каких АЗС: ${questionGroup}`,
+      `Для каких АЗС: ${questionGroup}\n` +
+      `Кнопка "Отсутсвует": ${question.Require === true ? 'Есть' : 'Нету'}`,
       {
         reply_markup: new InlineKeyboard()
           .text('Изменить', ` edit_question_${id}`)
@@ -60,13 +74,33 @@ function addQuestion(QuestionRepository) {
         break
 
       case 'text':
+        ctx.session.text = ctx.message.text
+
+        ctx.session.scene = 'require'
+
+        const options = [
+          ['Да', 'requireAtribute_true'],
+          ['Нет', 'requireAtribute_false'],
+        ]
+
+        // Create the inline keyboard markup with the options
+        const markup = {
+          inline_keyboard: options.map(o => [{ text: o[0], callback_data: o[1] }])
+        }
+
+        await ctx.reply('Добавить кнопку "Отсутсвует"?', { reply_markup: markup })
+
+        break
+
+      case 'require':
         const questionName = ctx.session.name
         const questionGroup = ctx.session.azs
-        const questionText = ctx.message.text
+        const questionText = ctx.session.text
+        const questionRequired = ctx.update.callback_query.data.split('_')[1]
 
-        await QuestionRepository.addQuestion(questionName, questionText, questionGroup)
+        await QuestionRepository.addQuestion(questionName, questionText, questionGroup, questionRequired)
 
-        await ctx.reply('Вопрос успешно добавлен в базу данных!')
+        await ctx.editMessageText('Вопрос успешно добавлен в базу данных!')
 
         ctx.session.scene = ''
         delete ctx.session.group
@@ -81,7 +115,9 @@ function addQuestion(QuestionRepository) {
           reply_markup: new InlineKeyboard()
             .text('Для АЗС с магазином', 'azs_with_shop')
             .row()
-            .text('Для АЗС без магазина', 'azs_without_shop'),
+            .text('Для АЗС без магазина', 'azs_without_shop')
+            .row()
+            .text('Для всех АЗС', 'azs_all'),
         }
 
         // Ask the user for the group name and provide the keyboard
@@ -111,7 +147,7 @@ function checkAzsType() {
           break
 
         default:
-          // Do nothing if the button data is unrecognized
+          ctx.session.azs = 'all'
           break
       }
 
@@ -184,7 +220,9 @@ function redirectUpdateQuestion() {
             reply_markup: new InlineKeyboard()
               .text('Для АЗС с магазином', 'azs_with_shop')
               .row()
-              .text('Для всех АЗС', 'azs_without_shop'),
+              .text('Для АЗС без магазина', 'azs_without_shop')
+              .row()
+              .text('Для всех АЗС', 'azs_all'),
           };
           await ctx.editMessageText('Выбирете азс:', keyboard);
           break;

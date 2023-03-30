@@ -9,7 +9,7 @@ export function questionSettingRoute(
   deleteQuestion,
   sendEditMessagePanel,
   redirectUpdateQuestion,
-  updateQuestionData,
+  updateQuestionData
 ) {
   botInstance.callbackQuery('show_all_questions', showQuestionList)
   botInstance.callbackQuery(/questionId_\d+/, questionProfile)
@@ -18,6 +18,7 @@ export function questionSettingRoute(
   botInstance.callbackQuery(/del_question_\d+/, deleteQuestion)
   botInstance.callbackQuery(/edit_question_\d+/, sendEditMessagePanel)
   botInstance.callbackQuery(/update_\w+/, redirectUpdateQuestion)
+  botInstance.callbackQuery(/requireAtribute_\w+/, addQuestion)
 
   botInstance.hears('Настроить вопросы', questionPanel)
 

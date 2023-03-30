@@ -1,10 +1,10 @@
 export const Models = {
-    Group: `CREATE TABLE IF NOT EXISTS "googleTelegram_bot"."Group"
+  Group: `CREATE TABLE IF NOT EXISTS "googleTelegram_bot"."Group"
   (
       "Name" text COLLATE pg_catalog."default" NOT NULL,
       CONSTRAINT "Group_pkey" PRIMARY KEY ("Name")
   );`,
-    User: `CREATE TABLE IF NOT EXISTS "googleTelegram_bot"."User"
+  User: `CREATE TABLE IF NOT EXISTS "googleTelegram_bot"."User"
   (
       "Id" bigint NOT NULL,
       "Group" text NOT NULL,
@@ -17,7 +17,7 @@ export const Models = {
           ON UPDATE CASCADE
           ON DELETE CASCADE
   );`,
-    PhotoFolder: `CREATE TABLE IF NOT EXISTS "googleTelegram_bot"."PhotoFolder"
+  PhotoFolder: `CREATE TABLE IF NOT EXISTS "googleTelegram_bot"."PhotoFolder"
   (
       "UserId" integer NOT NULL,
       "FolderId" text COLLATE pg_catalog."default" NOT NULL,
@@ -28,12 +28,13 @@ export const Models = {
           ON UPDATE CASCADE
           ON DELETE CASCADE
   );`,
-    Question: `CREATE TABLE IF NOT EXISTS "googleTelegram_bot"."Question"
+  Question: `CREATE TABLE IF NOT EXISTS "googleTelegram_bot"."Question"
   (
       "Id" BIGSERIAL NOT NULL,
       "Group" text NOT NULL,
       "Name" text COLLATE pg_catalog."default" NOT NULL,
       "Text" text COLLATE pg_catalog."default" NOT NULL,
+      "Require" boolean NOT NULL DEFAULT false,
       CONSTRAINT "Question_pkey" PRIMARY KEY ("Id")
   );`,
 }
