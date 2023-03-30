@@ -132,9 +132,9 @@ function userGroup(usersRepository) {
       if (user.Group == 'waitConfirm') {
         await ctx.editMessageText('Выберите тип АЗС', {
           reply_markup: new InlineKeyboard()
-            .text('Азс с магазином', `access_azs_${id}`)
+            .text('Азс без магазина', `access_azs_${id}`)
             .row()
-            .text('Азс без магазина', `access_azsWithStore_${id}`),
+            .text('Азс с магазином', `access_azsWithStore_${id}`),
         })
       } else if (
         user.Group == 'azs' ||
