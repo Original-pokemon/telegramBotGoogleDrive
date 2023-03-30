@@ -3,13 +3,11 @@ export function sheduleRoute(botInstance, schedule, sendReminder) {
     const sheduleTime = '00:00' //getDataBase TODO
 
     const [hour, minute] = sheduleTime.split(':')
-    console.log('sheduleTime :>> ', sheduleTime,)
 
 
     const intervale =
       (+hour * 60 + +minute) * 60 * 1000;
     setTimeout(() => {
-      console.log('intervale :>> ', intervale);
       sendReminder()
     }, intervale)
   })
