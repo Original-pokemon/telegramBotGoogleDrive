@@ -12,10 +12,8 @@ export class QuestionRepository {
   }
 
   async getQuestions(azs) {
-    const сondition = ` WHERE "Group" = 'azs';`
     const query =
-      `SELECT * FROM "googleTelegram_bot"."Question"` +
-      (azs === 'azs' ? сondition : '')
+      `SELECT * FROM "googleTelegram_bot"."Question"  WHERE "Group" = '${azs}' OR "Group" = 'all';`
     try {
       const res = await sendQuery(query)
       return res.rows
@@ -44,8 +42,8 @@ export class QuestionRepository {
     }
   }
 
-  async addQuestion(name, text, Group) {
-    const query = `INSERT INTO "googleTelegram_bot"."Question" ("Name", "Text", "Group") VALUES ('${name}', '${text}', '${Group}');`
+  async addQuestion(name, text, Group, request) {
+    const query = `INSERT INTO "googleTelegram_bot"."Question" ("Name", "Text", "Group", "Require") VALUES ('${name}', '${text}', '${Group}', ${request});`
     try {
       const res = await sendQuery(query)
       console.log('Successful add:', res.rowCount)
