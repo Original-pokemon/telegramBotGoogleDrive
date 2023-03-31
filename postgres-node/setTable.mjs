@@ -8,7 +8,12 @@ const tableQuery =
   Models.PhotoFolder
 
 export async function createTable() {
-  const client = await getClient()
-  const res = await client.query(tableQuery)
-  return res
+  try {
+    const client = await getClient()
+    const res = await client.query(tableQuery)
+    await client.end()
+    return res
+  } catch (err) {
+    throw err
+  }
 }

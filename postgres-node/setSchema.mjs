@@ -13,8 +13,13 @@ GRANT ALL ON SCHEMA "googleTelegram_bot" TO pg_database_owner;
 `
 
 export async function createSchema() {
-  const client = await getClient()
+  try {
+    const client = await getClient()
 
-  const res = await client.query(CREATE_SHEMA_QUERY)
-  return res
+    const res = await client.query(CREATE_SHEMA_QUERY)
+    await client.end()
+    return res
+  } catch (err) {
+    throw err
+  }
 }
