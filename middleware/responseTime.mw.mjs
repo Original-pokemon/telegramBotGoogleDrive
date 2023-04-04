@@ -8,10 +8,7 @@ export function responseTimeMiddleware() {
       // take time after
       const after = Date.now() // milliseconds
       // log difference
-      console.log(
-        `${now.getDate()}-${now.getMonth() + 1}-${now.getFullYear()} `,
-        `${now.getHours()}:${now.getMinutes()}:${now.getSeconds()}`,
-        `Response time: ${after - before} ms`,
+      console.log(`Response time: ${after - before} ms`,
         ctx.update.callback_query?.data || ctx.update.message?.text || 'photo'
       )
     } catch (error) {
