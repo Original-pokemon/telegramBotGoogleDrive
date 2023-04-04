@@ -71,7 +71,6 @@ function getPhotoAnswer() {
         ctx.deleteMessage()
         answers.push(false)
       } else {
-        console.log('question :>> ', questions[answers.length]);
         const fileName = questions[answers.length].Name
         const file = await ctx.getFile()
         const urlFile = file.getUrl()
@@ -122,11 +121,12 @@ function showPhotos() {
 
       await Promise.all(promises)
 
-      await ctx.deleteMessage()
-
       await ctx.reply('Отправить проверяющему все как есть', {
         reply_markup: new InlineKeyboard().text('Отправить', `sendPhotos`),
       })
+
+      await ctx.deleteMessage()
+
     } catch (err) {
       console.error('user.service > showPhotos ' + err)
     }
@@ -175,38 +175,52 @@ function editPhoto() {
 
 function saveToGoogle(GoogleRepository) {
   return async (ctx) => {
-    try {
-      if (ctx.session.photo.length === 0) {
-        ctx.deleteMessage()
-        return
-      }
-      const userFolder = ctx.session.user.UserFolder
-      const answers = ctx.session.photo
-      const date = new Date()
 
+    const userFolder = ctx.session.user.UserFolder
+    const answers = ctx.session.photo
+    const date = new Date()
+
+    try {
+      if (answers.length === 0) {
+        return await ctx.deleteMessage()
+      }
       const folderId = await GoogleRepository.makeFolder({
         folderName: `${date.getDate()}-${date.getMonth() + 1}-${date.getFullYear()}`,
         parentIdentifiers: userFolder,
       })
       await ctx.editMessageText('Фотографии отправляются ☑')
-      const promises = answers.map(async (e) => {
-        if (e) {
-          await await GoogleRepository.upload({
-            urlPath: e.urlFile,
-            fileName: e.fileName,
-            parentIdentifiers: folderId,
-          })
-        }
-      })
-
-      await Promise.all(promises)
+      await sendPhotosToDrive(GoogleRepository, answers, folderId)
 
       await ctx.editMessageText('Все фотографии отправленны ✅')
       ctx.session.photo = []
       ctx.session.scene = ''
     } catch (err) {
-      console.error('user.service > saveToGoogle ' + err)
+      if (err) {
+        console.error('user.service > saveToGoogle ' + err)
+      }
     }
+  }
+}
+
+const sendPhotosToDrive = async (GoogleRepository, arr, folderId,) => {
+  try {
+    const promises = arr.map(async (e, i) => {
+      if (e) {
+        await GoogleRepository.upload({
+          urlPath: e.urlFile,
+          fileName: e.fileName,
+          parentIdentifiers: folderId,
+        })
+        arr[i] = null
+        return true
+      }
+    })
+    await Promise.all(promises)
+
+    return true
+  } catch (err) {
+    console.error('user.service > sendPhotosToDrive: ' + err)
+    await sendPhotos(GoogleRepository, arr, folderId)
   }
 }
 
