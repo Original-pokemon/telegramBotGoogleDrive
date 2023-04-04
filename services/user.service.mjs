@@ -185,7 +185,7 @@ function saveToGoogle(GoogleRepository) {
       const date = new Date()
 
       const folderId = await GoogleRepository.makeFolder({
-        folderName: `${date.getDate()}-${date.getMonth()}-${date.getFullYear()}`,
+        folderName: `${date.getDate()}-${date.getMonth() + 1}-${date.getFullYear()}`,
         parentIdentifiers: userFolder,
       })
       await ctx.editMessageText('Фотографии отправляются ☑')
