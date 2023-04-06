@@ -1,5 +1,5 @@
 export function sheduleRoute(botInstance, schedule, sendReminder) {
-  schedule.scheduleJob({ hour: 16, minute: 16 }, async function () {
+  schedule.scheduleJob({ hour: 13, minute: 10 }, async function () {
     const sheduleTime = '00:00' //getDataBase TODO
 
     const [hour, minute] = sheduleTime.split(':')
@@ -11,10 +11,5 @@ export function sheduleRoute(botInstance, schedule, sendReminder) {
       sendReminder()
     }, intervale)
   })
-  botInstance.callbackQuery('postponeСheck', () => {
-    setTimeout(() => {
-      sendReminder()
-    }, 5000)
-
-  })
+  botInstance.callbackQuery('postponeСheck', sendReminder)
 }
