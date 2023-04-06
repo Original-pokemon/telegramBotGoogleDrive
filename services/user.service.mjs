@@ -16,6 +16,13 @@ const sendEndMsg = async (ctx) => {
   })
 }
 
+async function deleteMessage(ctx) {
+  try {
+    await ctx.deleteMessage();
+  } catch (err) {
+  }
+}
+
 const sendQestionMsg = async (ctx, questionNumber) => {
   if (ctx.session.questions[questionNumber].Require) {
     await ctx.reply(ctx.session.questions[questionNumber].Text, {
@@ -37,7 +44,7 @@ function userPanel(QuestionRepository) {
       ctx.session.scene = 'sending_photo'
       // check required parameters and send message
       await sendQestionMsg(ctx, 0)
-      await ctx.deleteMessage()
+      await deleteMessage(ctx);
     } catch (err) {
       if (err == `TypeError: Cannot read properties of undefined (reading 'Text')`) {
         console.error('В базе нету вопросов')
@@ -73,7 +80,7 @@ async function sendNextMsg(ctx, answers, questions) {
 
 // Helper function to handle callback query
 async function handleCallbackQuery(ctx, answers, questions) {
-  await ctx.deleteMessage()
+  await deleteMessage(ctx);
   answers.push(null)
   // Send next question or end message
   await sendNextMsg(ctx, answers, questions)
@@ -134,10 +141,7 @@ function getPhotoAnswer() {
       }
 
       // Check if scene is correct
-      if (ctx.session.scene !== 'sending_photo') {
-        await ctx.deleteMessage()
-        return
-      }
+      if (ctx.session.scene !== 'sending_photo') return await deleteMessage(ctx);
 
       // Get questions, answers, and custom data from session
       const questions = ctx.session.questions
@@ -161,10 +165,8 @@ function getPhotoAnswer() {
 function showPhotos() {
   return async (ctx) => {
     try {
-      if (ctx.session.photo.length === 0) {
-        ctx.deleteMessage()
-        return
-      }
+      if (ctx.session.photo.length === 0) return await deleteMessage(ctx);
+
       const promises = ctx.session.photo.map(async (e, i) => {
         if (e) {
           await ctx.replyWithPhoto(e.id, {
@@ -180,7 +182,7 @@ function showPhotos() {
         reply_markup: new InlineKeyboard().text('Отправить', `sendPhotos`),
       })
 
-      await ctx.deleteMessage()
+      await deleteMessage(ctx);
 
     } catch (err) {
       console.error('user.service > showPhotos ' + err)
@@ -191,10 +193,8 @@ function showPhotos() {
 function editPhotoPanel() {
   return async (ctx) => {
     try {
-      await ctx.deleteMessage()
-      if (ctx.session.scene !== 'end_msg') {
-        return
-      }
+      await deleteMessage(ctx);
+      if (ctx.session.scene !== 'end_msg') return
       const answers = ctx.session.photo
       const answersIndex = ctx.update.callback_query.data.split('_')[1]
       const photo = answers[answersIndex]
@@ -211,10 +211,8 @@ function editPhotoPanel() {
 function editPhoto() {
   return async (ctx) => {
     try {
-      if (!ctx.update.message?.photo) {
-        ctx.deleteMessage()
-        return
-      }
+      if (!ctx.update.message?.photo) return await deleteMessage(ctx)
+
       const answers = ctx.session.photo
       const answersIndex = ctx.session.customData
       const photo = answers[answersIndex]
@@ -236,9 +234,8 @@ function saveToGoogle(GoogleRepository) {
     const date = new Date()
 
     try {
-      if (answers.length === 0) {
-        return await ctx.deleteMessage()
-      }
+      if (answers.length === 0) return await deleteMessage(ctx);
+
       const folderId = await GoogleRepository.makeFolder({
         folderName: `${date.getDate()}-${date.getMonth() + 1}-${date.getFullYear()}`,
         parentIdentifiers: userFolder,

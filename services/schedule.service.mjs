@@ -13,40 +13,47 @@ export function sendReminderMessage(botInstance, UsersRepository) {
       .row()
       .text('Нет', 'postponeСheck'),
   }
+
   return async (ctx) => {
     try {
       if (ctx) {
-        sendReminderToOne(ctx)
+        await sendReminderToOne(ctx)
       } else {
-        sendRemindersToAll()
+        await sendRemindersToAll()
       }
     } catch (err) {
-      if (err.name == 'GrammyError') {
-        return console.error("Error in request:", err.description);
-      }
       console.error('schedule.service > sendReminderMessage ' + err)
     }
   }
 
   async function sendRemindersToAll() {
-    const users = await UsersRepository.getAllAzs()
-    const promises = users.map(async (e) => {
-      const id = e.Id
-      try {
-        await botInstance.api.sendMessage(id, MSG_TEXT, markup)
-        await new Promise(resolve => setTimeout(resolve, 500))
-      } catch (err) {
-        console.error('Error sending message to user:', id, err)
-      }
-    })
-    await Promise.all(promises)
+    try {
+      const users = await UsersRepository.getAllAzs()
+      const promises = users.map(async (e) => {
+        const id = e.Id
+        try {
+          await botInstance.api.sendMessage(id, MSG_TEXT, markup)
+          await new Promise(resolve => setTimeout(resolve, 500))
+        } catch (err) {
+          console.error('Error sending message to user:', id, err)
+        }
+      })
+      await Promise.all(promises)
+    } catch (err) {
+      console.error('Error sending reminders to all users:', err)
+    }
   }
 
   async function sendReminderToOne(ctx) {
-    await ctx.deleteMessage()
-    await new Promise(resolve => setTimeout(resolve, 1000 * 60 * 60 * HOUR_WAIT))
-    await ctx.reply(MSG_TEXT, markup)
+    try {
+      try {
+        await ctx.deleteMessage();
+      } catch (err) {
+      }
+      await new Promise(resolve => setTimeout(resolve, 1000 * 60 * 60 * HOUR_WAIT))
+      await ctx.reply(MSG_TEXT, markup)
+    } catch (err) {
+      console.error('Error sending reminder to user:', err)
+    }
   }
-
-
 }
