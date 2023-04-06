@@ -40,10 +40,11 @@ const sendQestionMsg = async (ctx, questionNumber) => {
 function userPanel(QuestionRepository) {
   return async (ctx) => {
     const group = ctx.session.user.Group
+    ctx.session.photo = []
+    ctx.session.customData = []
     try {
       const questions = await QuestionRepository.getQuestions(group)
       ctx.session.questions = questions
-      ctx.session.customData = []
       ctx.session.scene = 'sending_photo'
       // check required parameters and send message
       await sendQestionMsg(ctx, 0)
