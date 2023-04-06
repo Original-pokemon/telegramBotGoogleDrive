@@ -1,4 +1,4 @@
-import { InlineKeyboard } from 'grammy'
+import { InlineKeyboard, HttpError } from 'grammy'
 
 const sendEndMsg = async (ctx) => {
   const MSG_TEXT = `Вы отправили все требуемые фотографии!👍\n\n` +
@@ -49,53 +49,108 @@ function userPanel(QuestionRepository) {
   }
 }
 
+// Helper function to check if user took too long to answer
+async function checkAnswerTime(ctx, customData) {
+  const msgDate = ctx.update.message.date
+  if (customData.at(-1) <= msgDate - 5 * 60) {
+    ctx.session.photo = []
+    ctx.session.customData = []
+    await ctx.reply('Вы не уложились в 5 минут.\nПройдите проверку заново')
+    await sendQestionMsg(ctx, 0)
+    return true
+  }
+  return false
+}
+
+async function sendNextMsg(ctx, answers, questions) {
+  // Send next question or end message
+  if (questions.length == answers.length) {
+    await sendEndMsg(ctx)
+  } else {
+    await sendQestionMsg(ctx, answers.length)
+  }
+}
+
+// Helper function to handle callback query
+async function handleCallbackQuery(ctx, answers, questions) {
+  await ctx.deleteMessage()
+  answers.push(null)
+  // Send next question or end message
+  await sendNextMsg(ctx, answers, questions)
+}
+
+// Helper function to handle photo message
+async function handlePhotoMessage(ctx, answers, questions) {
+  const fileName = questions[answers.length].Name
+  const msgDate = ctx.update.message.date
+  const customData = ctx.session.customData
+
+  const answerTimePassed = await checkAnswerTime(ctx, customData)
+
+  if (answerTimePassed) {
+    return
+  }
+
+  customData.push(msgDate)
+
+  // Get file with retry on HttpError
+  let file
+  try {
+    file = await ctx.getFile()
+  } catch (err) {
+    if (err instanceof HttpError) {
+      const RETRY_AFTER = 10 // Retry after 10 seconds
+      console.error(`HttpError: ${err.message}. Retrying in ${RETRY_AFTER} seconds.`)
+      await new Promise((resolve) => setTimeout(resolve, RETRY_AFTER * 1000))
+      file = await ctx.getFile() // Retry getFile()
+    } else {
+      throw err // Rethrow non-HttpError
+    }
+  }
+
+  const urlFile = file.getUrl()
+
+  answers.push({
+    fileName,
+    urlFile,
+    id: file.file_id,
+  })
+
+  // Send next question or end message
+  await sendNextMsg(ctx, answers, questions)
+}
+
 function getPhotoAnswer() {
   return async (ctx) => {
+    // Check if there is a photo in the message or callback query
+    if (!ctx.update.message?.photo && !ctx.callbackQuery?.data) return null
+
     try {
-      if (!ctx.update.message?.photo && !ctx.callbackQuery?.data) {
-        return null
-      }
+      // Check if user interrupted previous check
       if (!ctx.update.message?.photo && ctx.callbackQuery?.data !== 'skip_photo') {
         ctx.session.scene = ''
-        return await ctx.reply('Вы прервали прошлую проверку😔\n\nНажмите кнопку "Да" ещё раз🙏')
-      }
-      if (ctx.session.scene !== 'sending_photo') {
-        return await ctx.deleteMessage()
+        await ctx.reply('Вы прервали прошлую проверку😔\n\nНажмите кнопку "Да" ещё раз🙏')
+        return
       }
 
+      // Check if scene is correct
+      if (ctx.session.scene !== 'sending_photo') {
+        await ctx.deleteMessage()
+        return
+      }
+
+      // Get questions, answers, and custom data from session
       const questions = ctx.session.questions
       const answers = ctx.session.photo
-      const customData = ctx.session.customData
 
+      // Handle callback query
       if (ctx.callbackQuery?.data) {
-        ctx.deleteMessage()
-        answers.push(false)
-      } else {
-        const fileName = questions[answers.length].Name
-        const file = await ctx.getFile()
-        const urlFile = file.getUrl()
-        const msgDate = ctx.update.message.date
-
-        if (customData.at(-1) <= msgDate - 5 * 60) {
-          ctx.session.photo = []
-          ctx.session.customData = []
-          await ctx.reply('Вы не уложились в 5 минут.\nПройдите проверку заново')
-          return await sendQestionMsg(ctx, 0)
-        } else {
-          customData.push(msgDate)
-        }
-
-        answers.push({
-          fileName,
-          urlFile,
-          id: file.file_id,
-        })
+        await handleCallbackQuery(ctx, answers, questions)
+        return
       }
-      if (questions.length == answers.length) {
-        await sendEndMsg(ctx)
-      } else {
-        await sendQestionMsg(ctx, answers.length)
-      }
+
+      // Handle photo message
+      await handlePhotoMessage(ctx, answers, questions)
 
     } catch (err) {
       console.error('user.service > getPhotoAnswer ' + err)
@@ -202,27 +257,52 @@ function saveToGoogle(GoogleRepository) {
   }
 }
 
-const sendPhotosToDrive = async (GoogleRepository, arr, folderId,) => {
-  try {
-    const promises = arr.map(async (e, i) => {
-      if (e) {
-        await GoogleRepository.upload({
-          urlPath: e.urlFile,
-          fileName: e.fileName,
-          parentIdentifiers: folderId,
-        })
-        arr[i] = null
-        return true
-      }
-    })
-    await Promise.all(promises)
+async function sendPhotosToDrive(GoogleRepository, arr, folderId) {
+  const MAX_SIMULTANEOUS_REQUESTS = 10
+  const MAX_RETIES = 10
+  let retries = 0
 
-    return true
-  } catch (err) {
-    console.error('user.service > sendPhotosToDrive: ' + err)
-    await sendPhotos(GoogleRepository, arr, folderId)
+  while (retries < MAX_RETIES) {
+    try {
+      const promises = []
+      let simultaneousRequests = 0
+
+      for (let i = 0; i < arr.length; i++) {
+        const e = arr[i]
+
+        if (e) {
+          const promise = GoogleRepository.upload({
+            urlPath: e.urlFile,
+            fileName: e.fileName,
+            parentIdentifiers: folderId,
+          })
+          promises.push(promise)
+          arr[i] = null
+          simultaneousRequests++
+
+          if (simultaneousRequests >= MAX_SIMULTANEOUS_REQUESTS) {
+            await Promise.allSettled(promises)
+            promises.length = 0
+            simultaneousRequests = 0
+          }
+        }
+      }
+
+      if (promises.length > 0) {
+        await Promise.allSettled(promises)
+      }
+
+      return true
+    } catch (err) {
+      console.error('user.service > sendPhotosToDrive: ' + err)
+      retries++
+      await new Promise(resolve => setTimeout(resolve, 1000 * retries))
+    }
   }
+
+  throw new Error('Error: max retries exceeded')
 }
+
 
 export {
   userPanel,
