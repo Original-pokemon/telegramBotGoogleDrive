@@ -24,13 +24,16 @@ async function deleteMessage(ctx) {
 }
 
 const sendQestionMsg = async (ctx, questionNumber) => {
-  if (ctx.session.questions[questionNumber].Require) {
+  const questions = ctx.session.questions
+  const question = questions[questionNumber]
+
+  if (question.Require) {
     await ctx.reply(ctx.session.questions[questionNumber].Text, {
       reply_markup: new InlineKeyboard()
         .text('Отсутсвует', 'skip_photo')
     })
   } else {
-    await ctx.reply(ctx.session.questions[questionNumber].Text)
+    await ctx.reply(question.Text)
   }
 }
 
