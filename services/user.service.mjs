@@ -128,27 +128,23 @@ async function handlePhotoMessage(ctx, answers, questions) {
   customData.push(msgDate)
 
   // Get file with retry on HttpError
-  let file
   try {
-    file = await ctx.getFile()
+    const file = await ctx.getFile()
+    const urlFile = file.getUrl()
+
+    answers.push({
+      fileName,
+      urlFile,
+      id: file.file_id,
+    })
   } catch (err) {
     if (err instanceof HttpError) {
-      const RETRY_AFTER = 10 // Retry after 10 seconds
-      console.error(`HttpError: ${err.message}. Retrying in ${RETRY_AFTER} seconds.`)
-      await new Promise((resolve) => setTimeout(resolve, RETRY_AFTER * 1000))
-      file = await ctx.getFile() // Retry getFile()
+      console.log(`HttpError: ${err.message}. Retrying in ${RETRY_AFTER} seconds.`)
+      setTimeout(handlePhotoMessage(ctx, answers, questions), RETRY_AFTER * 1000)
     } else {
       throw err // Rethrow non-HttpError
     }
   }
-
-  const urlFile = file.getUrl()
-
-  answers.push({
-    fileName,
-    urlFile,
-    id: file.file_id,
-  })
 
   // Send next question or end message
   await sendNextMsg(ctx, answers, questions)
@@ -181,7 +177,7 @@ function getPhotoAnswer() {
       }
 
       // Handle photo message
-      await handlePhotoMessage(ctx, answers, questions)
+      handlePhotoMessage(ctx, answers, questions)
 
     } catch (err) {
       console.error('user.service > getPhotoAnswer ' + err)
