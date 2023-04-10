@@ -73,16 +73,28 @@ function userPanel(QuestionRepository) {
 }
 
 // Helper function to check if user took too long to answer
-async function checkAnswerTime(ctx, customData) {
+function checkAnswerTime(ctx, customData) {
   const msgDate = ctx.update.message.date
   if (customData.at(-1) <= msgDate - 5 * 60) {
-    ctx.session.photo = []
-    ctx.session.customData = []
-    await ctx.reply('Вы не уложились в 5 минут.\nПройдите проверку заново')
-    await sendQestionMsg(ctx, 0)
     return true
   }
   return false
+}
+
+async function handleAnswerTimeExceeded(ctx) {
+  try {
+    // Notify user and reset session data
+    await ctx.reply('Вы не уложились в 5 минут.\nПройдите проверку заново')
+    ctx.session.photo = []
+    ctx.session.customData = []
+
+    // Send first question again
+    await sendQestionMsg(ctx, 0)
+  } catch (err) {
+    // Handle error by retrying the function
+    console.log(`Error in handleAnswerTimeExceeded. Retrying in ${RETRY_AFTER} seconds.`)
+    setTimeout(await handleAnswerTimeExceeded(ctx), RETRY_AFTER * 1000)
+  }
 }
 
 async function sendNextMsg(ctx, answers, questions) {
@@ -108,9 +120,8 @@ async function handlePhotoMessage(ctx, answers, questions) {
   const msgDate = ctx.update.message.date
   const customData = ctx.session.customData
 
-  const answerTimePassed = await checkAnswerTime(ctx, customData)
-
-  if (answerTimePassed) {
+  if (checkAnswerTime(ctx, customData)) {
+    handleAnswerTimeExceeded(ctx)
     return
   }
 
