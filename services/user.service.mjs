@@ -50,8 +50,8 @@ function userPanel(QuestionRepository) {
       await sendQestionMsg(ctx, 0)
       await deleteMessage(ctx);
     } catch (err) {
-      if (err == `TypeError: Cannot read properties of undefined (reading 'Text')`) {
-        console.error('В базе нету вопросов')
+      if (questions.length <= 0) {
+        console.log('В базе нету вопросов')
         sendEndMsg(ctx)
       } else {
         console.error('user.service > userPanel ' + err)
