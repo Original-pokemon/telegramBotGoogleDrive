@@ -17,9 +17,9 @@ export function sendReminderMessage(botInstance, UsersRepository) {
   return async (ctx) => {
     try {
       if (ctx) {
-        await sendReminderToOne(ctx)
+        sendReminderToOne(ctx)
       } else {
-        await sendRemindersToAll()
+        sendRemindersToAll()
       }
     } catch (err) {
       console.error('schedule.service > sendReminderMessage ' + err)
