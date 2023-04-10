@@ -1,19 +1,26 @@
 import { InlineKeyboard, HttpError } from 'grammy'
 
-const sendEndMsg = async (ctx) => {
-  const MSG_TEXT = `Вы отправили все требуемые фотографии!👍\n\n` +
-    `Проверьте все фото перед отправкой🧐\n\n` +
-    `❗Если вы допустили ошибку можете изменить отправленную фотографию\n` +
-    `Для этого нажмите "Показать все фото" и выберите фото, которое надо заменить❗`
+const MSG_TEXT = `Вы отправили все требуемые фотографии!👍\n\n` +
+  `Проверьте все фото перед отправкой🧐\n\n` +
+  `❗Если вы допустили ошибку можете изменить отправленную фотографию\n` +
+  `Для этого нажмите "Показать все фото" и выберите фото, которое надо заменить❗`
 
-  ctx.session.customData = []
-  ctx.session.scene = 'end_msg'
-  await ctx.reply(MSG_TEXT, {
-    reply_markup: new InlineKeyboard()
-      .text('Показать все фото', 'showPhotos')
-      .row()
-      .text('Отправить проверяющему', 'sendPhotos'),
-  })
+const RETRY_AFTER = 5 // Retry after 5 seconds
+
+async function sendEndMsg(ctx) {
+  try {
+    ctx.session.customData = []
+    ctx.session.scene = 'end_msg'
+    await ctx.reply(MSG_TEXT, {
+      reply_markup: new InlineKeyboard()
+        .text('Показать все фото', 'showPhotos')
+        .row()
+        .text('Отправить проверяющему', 'sendPhotos'),
+    })
+  } catch (err) {
+    console.log(`Error sending end message: ${err.message}. Retrying in ${RETRY_AFTER} seconds.`);
+    setTimeout(await sendEndMsg(ctx), RETRY_AFTER * 1000)
+  }
 }
 
 async function deleteMessage(ctx) {
@@ -27,13 +34,18 @@ const sendQestionMsg = async (ctx, questionNumber) => {
   const questions = ctx.session.questions
   const question = questions[questionNumber]
 
-  if (question.Require) {
-    await ctx.reply(ctx.session.questions[questionNumber].Text, {
-      reply_markup: new InlineKeyboard()
-        .text('Отсутсвует', 'skip_photo')
-    })
-  } else {
-    await ctx.reply(question.Text)
+  try {
+    if (question.Require) {
+      await ctx.reply(ctx.session.questions[questionNumber].Text, {
+        reply_markup: new InlineKeyboard()
+          .text('Отсутсвует', 'skip_photo')
+      })
+    } else {
+      await ctx.reply(question.Text)
+    }
+  } catch (err) {
+    console.log(`Error in sendQestionMsg: ${err}. Retrying in ${RETRY_AFTER} seconds.`)
+    setTimeout(await sendQestionMsg(ctx, questionNumber), RETRY_AFTER * 1000)
   }
 }
 
