@@ -7,47 +7,10 @@ const MSG_TEXT = `Вы отправили все требуемые фотогр
   `❗Если вы допустили ошибку можете изменить отправленную фотографию\n` +
   `Для этого нажмите "Показать все фото" и выберите фото, которое надо заменить❗`
 
-
-const sendEndMsg = async (ctx) => {
-  try {
-    ctx.session.customData = []
-    ctx.session.scene = 'end_msg'
-    await retry(async () => await ctx.reply(MSG_TEXT, {
-      reply_markup: new InlineKeyboard()
-        .text('Показать все фото', 'showPhotos')
-        .row()
-        .text('Отправить проверяющему', 'sendPhotos'),
-    }))
-  } catch (err) {
-    console.log(`Error sending end message: ${err.message}`);
-  }
-}
-
 const deleteMessage = async (ctx) => {
   try {
     await ctx.deleteMessage();
   } catch (err) {
-  }
-}
-
-const sendQestionMsg = async (ctx, questionNumber) => {
-  const questions = ctx.session.questions
-  const question = questions[questionNumber]
-
-  try {
-    console.log(question.Name)
-    await retry(async () => {
-      if (question.Require) {
-        await ctx.reply(ctx.session.questions[questionNumber].Text, {
-          reply_markup: new InlineKeyboard()
-            .text('Отсутсвует', 'skip_photo')
-        })
-      } else {
-        await ctx.reply(question.Text)
-      }
-    }, options)
-  } catch (err) {
-    console.log(`Error in sendQestionMsg: ${err}`)
   }
 }
 
@@ -94,6 +57,52 @@ async function handleAnswerTimeExceeded(ctx, answers) {
   }
 }
 
+const debounce = (callback, timeoutDelay = 500) => {
+  let timeoutId;
+
+  return (...rest) => {
+    clearTimeout(timeoutId);
+
+    timeoutId = setTimeout(() => callback.apply(this, rest), timeoutDelay);
+  };
+}
+
+const sendEndMsg = async (ctx) => {
+  try {
+    ctx.session.customData = []
+    ctx.session.scene = 'end_msg'
+    await retry(async () => await ctx.reply(MSG_TEXT, {
+      reply_markup: new InlineKeyboard()
+        .text('Показать все фото', 'showPhotos')
+        .row()
+        .text('Отправить проверяющему', 'sendPhotos'),
+    }))
+  } catch (err) {
+    console.log(`Error sending end message: ${err.message}`);
+  }
+}
+
+const sendQestionMsg = async (ctx, questionNumber) => {
+  const questions = ctx.session.questions
+  const question = questions[questionNumber]
+
+  try {
+    console.log(question.Name)
+    await retry(async () => {
+      if (question.Require) {
+        await ctx.reply(ctx.session.questions[questionNumber].Text, {
+          reply_markup: new InlineKeyboard()
+            .text('Отсутсвует', 'skip_photo')
+        })
+      } else {
+        await ctx.reply(question.Text)
+      }
+    }, options)
+  } catch (err) {
+    console.log(`Error in sendQestionMsg: ${err}`)
+  }
+}
+
 async function sendNextMsg(ctx, answersLength, questionsLength) {
   // Send next question or end message
   if (answersLength > questionsLength) return
@@ -105,6 +114,8 @@ async function sendNextMsg(ctx, answersLength, questionsLength) {
   }
 }
 
+const sendNextMsgDebounced = debounce(sendNextMsg);
+
 // Helper function to handle callback query
 async function handleCallbackQuery(ctx, answers, questions) {
   await deleteMessage(ctx);
@@ -114,8 +125,11 @@ async function handleCallbackQuery(ctx, answers, questions) {
 }
 
 // Helper function to handle photo message
+
 async function handlePhotoMessage(ctx, answers, questions) {
-  const fileName = questions[answers.length].Name
+  if (answers.length === questions.length) return
+
+  const fileName = questions[answers.length].Name //trow error
   const msgDate = ctx.update.message.date
   const customData = ctx.session.customData
 
@@ -134,8 +148,9 @@ async function handlePhotoMessage(ctx, answers, questions) {
       urlFile,
       id: file.file_id,
     })
+
     // Send next question or end message 
-    sendNextMsg(ctx, answers.length, questions.length)
+    sendNextMsgDebounced(ctx, answers.length, questions.length)
   } catch (err) {
     console.error('user.service >> handlePhotoMessage: ', err);
   }
@@ -159,6 +174,7 @@ function getPhotoAnswer() {
       // Get questions, answers, and custom data from session
       const questions = ctx.session.questions
       const answers = ctx.session.photo
+
       // Handle callback query
       if (ctx.callbackQuery?.data) {
         await handleCallbackQuery(ctx, answers, questions)
