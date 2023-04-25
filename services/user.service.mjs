@@ -43,17 +43,16 @@ const checkAnswerTime = (ctx, customData) => (customData.at(-1) <= ctx.update.me
 async function handleAnswerTimeExceeded(ctx, answers) {
   try {
     // Notify user and reset session data
-    await ctx.reply('Вы не уложились в 5 минут.\nПройдите проверку заново')
+    await retry(async () => await ctx.reply('Вы не уложились в 5 минут.\nПройдите проверку заново'), options)
     answers = []
     ctx.session.customData = []
 
     // Send first question again
-    await sendQestionMsg(ctx, 0)
+    await retry(async () => await sendQestionMsg(ctx, 0), options)
     console.log('Answer time exceeded');
   } catch (err) {
     // Handle error by retrying the function
-    console.log(`Error in handleAnswerTimeExceeded. Retrying in ${RETRY_AFTER} seconds.`)
-    setTimeout(await handleAnswerTimeExceeded(ctx), RETRY_AFTER * 1000)
+    console.log(`Error in handleAnswerTimeExceeded: ${err}`)
   }
 }
 
