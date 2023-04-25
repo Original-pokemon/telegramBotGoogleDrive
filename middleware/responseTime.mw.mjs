@@ -1,16 +1,10 @@
 export function responseTimeMiddleware() {
   return async (ctx, next) => {
     try {
-      const now = new Date()
-      const before = Date.now() // milliseconds
+      console.time(ctx.update.callback_query?.data || ctx.update.message?.text || 'photo') // milliseconds
       // invoke downstream middleware
       await next() // make sure to `await`!
-      // take time after
-      const after = Date.now() // milliseconds
-      // log difference
-      console.log(`Response time: ${after - before} ms`,
-        ctx.update.callback_query?.data || ctx.update.message?.text || 'photo'
-      )
+      console.timeEnd(ctx.update.callback_query?.data || ctx.update.message?.text || 'photo')
     } catch (error) {
       console.error('Error in responseTimeMiddleware:', error)
     }

@@ -1,29 +1,29 @@
-import { InlineKeyboard, HttpError } from 'grammy'
+import { InlineKeyboard } from 'grammy'
+import retry from 'async-retry';
+import { options } from '../variables.mjs'
 
 const MSG_TEXT = `Вы отправили все требуемые фотографии!👍\n\n` +
   `Проверьте все фото перед отправкой🧐\n\n` +
   `❗Если вы допустили ошибку можете изменить отправленную фотографию\n` +
   `Для этого нажмите "Показать все фото" и выберите фото, которое надо заменить❗`
 
-const RETRY_AFTER = 5 // Retry after 5 seconds
 
-async function sendEndMsg(ctx) {
+const sendEndMsg = async (ctx) => {
   try {
     ctx.session.customData = []
     ctx.session.scene = 'end_msg'
-    await ctx.reply(MSG_TEXT, {
+    await retry(async () => await ctx.reply(MSG_TEXT, {
       reply_markup: new InlineKeyboard()
         .text('Показать все фото', 'showPhotos')
         .row()
         .text('Отправить проверяющему', 'sendPhotos'),
-    })
+    }))
   } catch (err) {
-    console.log(`Error sending end message: ${err.message}. Retrying in ${RETRY_AFTER} seconds.`);
-    setTimeout(await sendEndMsg(ctx), RETRY_AFTER * 1000)
+    console.log(`Error sending end message: ${err.message}`);
   }
 }
 
-async function deleteMessage(ctx) {
+const deleteMessage = async (ctx) => {
   try {
     await ctx.deleteMessage();
   } catch (err) {
@@ -35,17 +35,19 @@ const sendQestionMsg = async (ctx, questionNumber) => {
   const question = questions[questionNumber]
 
   try {
-    if (question.Require) {
-      await ctx.reply(ctx.session.questions[questionNumber].Text, {
-        reply_markup: new InlineKeyboard()
-          .text('Отсутсвует', 'skip_photo')
-      })
-    } else {
-      await ctx.reply(question.Text)
-    }
+    console.log(question.Name)
+    await retry(async () => {
+      if (question.Require) {
+        await ctx.reply(ctx.session.questions[questionNumber].Text, {
+          reply_markup: new InlineKeyboard()
+            .text('Отсутсвует', 'skip_photo')
+        })
+      } else {
+        await ctx.reply(question.Text)
+      }
+    }, options)
   } catch (err) {
-    console.log(`Error in sendQestionMsg: ${err}. Retrying in ${RETRY_AFTER} seconds.`)
-    setTimeout(await sendQestionMsg(ctx, questionNumber), RETRY_AFTER * 1000)
+    console.log(`Error in sendQestionMsg: ${err}`)
   }
 }
 
@@ -73,23 +75,18 @@ function userPanel(QuestionRepository) {
 }
 
 // Helper function to check if user took too long to answer
-function checkAnswerTime(ctx, customData) {
-  const msgDate = ctx.update.message.date
-  if (customData.at(-1) <= msgDate - 5 * 60) {
-    return true
-  }
-  return false
-}
+const checkAnswerTime = (ctx, customData) => (customData.at(-1) <= ctx.update.message.date - 5 * 60) ? true : false
 
-async function handleAnswerTimeExceeded(ctx) {
+async function handleAnswerTimeExceeded(ctx, answers) {
   try {
     // Notify user and reset session data
     await ctx.reply('Вы не уложились в 5 минут.\nПройдите проверку заново')
-    ctx.session.photo = []
+    answers = []
     ctx.session.customData = []
 
     // Send first question again
     await sendQestionMsg(ctx, 0)
+    console.log('Answer time exceeded');
   } catch (err) {
     // Handle error by retrying the function
     console.log(`Error in handleAnswerTimeExceeded. Retrying in ${RETRY_AFTER} seconds.`)
@@ -97,12 +94,14 @@ async function handleAnswerTimeExceeded(ctx) {
   }
 }
 
-async function sendNextMsg(ctx, answers, questions) {
+async function sendNextMsg(ctx, answersLength, questionsLength) {
   // Send next question or end message
-  if (questions.length == answers.length) {
+  if (answersLength > questionsLength) return
+
+  if (questionsLength === answersLength) {
     await sendEndMsg(ctx)
   } else {
-    await sendQestionMsg(ctx, answers.length)
+    await sendQestionMsg(ctx, answersLength)
   }
 }
 
@@ -111,7 +110,7 @@ async function handleCallbackQuery(ctx, answers, questions) {
   await deleteMessage(ctx);
   answers.push(null)
   // Send next question or end message
-  await sendNextMsg(ctx, answers, questions)
+  sendNextMsg(ctx, answers, questions)
 }
 
 // Helper function to handle photo message
@@ -121,38 +120,29 @@ async function handlePhotoMessage(ctx, answers, questions) {
   const customData = ctx.session.customData
 
   if (checkAnswerTime(ctx, customData)) {
-    handleAnswerTimeExceeded(ctx)
+    handleAnswerTimeExceeded(ctx, answers)
     return
   }
 
   customData.push(msgDate)
-
   // Get file with retry on HttpError
   try {
-    const file = await ctx.getFile()
+    const file = await retry(async () => await ctx.getFile(), options)
     const urlFile = file.getUrl()
-
     answers.push({
       fileName,
       urlFile,
       id: file.file_id,
     })
+    // Send next question or end message 
+    sendNextMsg(ctx, answers.length, questions.length)
   } catch (err) {
-    if (err instanceof HttpError) {
-      console.log(`HttpError: ${err.message}. Retrying in ${RETRY_AFTER} seconds.`)
-      setTimeout(handlePhotoMessage(ctx, answers, questions), RETRY_AFTER * 1000)
-    } else {
-      throw err // Rethrow non-HttpError
-    }
+    console.error('user.service >> handlePhotoMessage: ', err);
   }
-
-  // Send next question or end message
-  await sendNextMsg(ctx, answers, questions)
 }
 
 function getPhotoAnswer() {
   return async (ctx) => {
-    // Check if there is a photo in the message or callback query
     if (!ctx.update.message?.photo && !ctx.callbackQuery?.data) return null
 
     try {
@@ -169,7 +159,6 @@ function getPhotoAnswer() {
       // Get questions, answers, and custom data from session
       const questions = ctx.session.questions
       const answers = ctx.session.photo
-
       // Handle callback query
       if (ctx.callbackQuery?.data) {
         await handleCallbackQuery(ctx, answers, questions)
@@ -177,8 +166,7 @@ function getPhotoAnswer() {
       }
 
       // Handle photo message
-      handlePhotoMessage(ctx, answers, questions)
-
+      await handlePhotoMessage(ctx, answers, questions)
     } catch (err) {
       console.error('user.service > getPhotoAnswer ' + err)
     }
@@ -322,7 +310,6 @@ async function sendPhotosToDrive(GoogleRepository, arr, folderId) {
 
   throw new Error('Error: max retries exceeded')
 }
-
 
 export {
   userPanel,
