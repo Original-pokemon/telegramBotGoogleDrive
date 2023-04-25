@@ -10,8 +10,6 @@ export function authMiddleware(bot, userRepository) {
         .filter((item) => item !== ' ')
         .join('') + last_name
     try {
-      console.log('userName :>> ', userName);
-
       let user = await userRepository.getUser(userId)
 
 
