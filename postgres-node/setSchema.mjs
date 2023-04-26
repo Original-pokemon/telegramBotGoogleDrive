@@ -18,6 +18,7 @@ export async function createSchema() {
 
     const res = await client.query(CREATE_SHEMA_QUERY)
     await client.end()
+    if (res[0].rowCount) console.log('Created schema')
     return res
   } catch (err) {
     throw err

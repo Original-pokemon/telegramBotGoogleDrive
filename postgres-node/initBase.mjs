@@ -9,13 +9,9 @@ export async function initBase(groupRepository) {
     await groupRepository.addGroup('waitConfirm')
     await groupRepository.addGroup('azsWithStore')
     await groupRepository.addGroup('azs')
-    console.log('Database was created')
+    // console.log('Database was created')
     return true
   } catch (err) {
-    if (err.message == 'duplicate key value violates unique constraint "Group_pkey"') {
-      console.log('All database table already have')
-    } else {
-      console.error(`initBase: ` + err.message);
-    }
+    console.error(`initBase: ` + err.message);
   }
 }

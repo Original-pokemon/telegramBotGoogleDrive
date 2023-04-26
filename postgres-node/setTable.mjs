@@ -12,6 +12,7 @@ export async function createTable() {
     const client = await getClient()
     const res = await client.query(tableQuery)
     await client.end()
+    if (res[0].rowCount) console.log('Created table')
     return res
   } catch (err) {
     throw err

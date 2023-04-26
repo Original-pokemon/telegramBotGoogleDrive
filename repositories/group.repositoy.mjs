@@ -23,9 +23,10 @@ export class GroupRepository {
   }
 
   async addGroup(GroupName) {
-    const query = `INSERT INTO "googleTelegram_bot"."Group" VALUES ('${GroupName}');`
+    const query = `INSERT INTO "googleTelegram_bot"."Group" VALUES ('${GroupName}') ON CONFLICT DO NOTHING;`
     try {
       const res = await sendQuery(query)
+      if (res.rowCount) console.log('Created group:', GroupName)
       return res
     } catch (err) {
       throw err
