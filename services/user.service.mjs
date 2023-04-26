@@ -3,48 +3,6 @@ import retry from 'async-retry';
 import { options, END_MSG_TEXT } from '../variables.mjs'
 import { debounce, deleteMessage } from '../utils.mjs';
 
-function userPanel(QuestionRepository) {
-  return async (ctx) => {
-    const group = ctx.session.user.Group
-    ctx.session.photo = []
-    ctx.session.customData = []
-    try {
-      const questions = await QuestionRepository.getQuestions(group)
-      ctx.session.questions = questions
-      ctx.session.scene = 'sending_photo'
-      // check required parameters and send message
-      await sendQestionMsg(ctx, 0)
-      await deleteMessage(ctx);
-    } catch (err) {
-      if (questions.length <= 0) {
-        console.log('В базе нету вопросов')
-        sendEndMsg(ctx)
-      } else {
-        console.error('user.service > userPanel ' + err)
-      }
-    }
-  }
-}
-
-// Helper function to check if user took too long to answer
-const checkAnswerTime = (ctx, customData) => (customData.at(-1) <= ctx.update.message.date - 5 * 60) ? true : false
-
-async function handleAnswerTimeExceeded(ctx, answers) {
-  try {
-    // Notify user and reset session data
-    await retry(async () => await ctx.reply('Вы не уложились в 5 минут.\nПройдите проверку заново'), options)
-    answers = []
-    ctx.session.customData = []
-
-    // Send first question again
-    await retry(async () => await sendQestionMsg(ctx, 0), options)
-    console.log(`${ctx.session.user.Name} :>> Answer time exceeded`);
-  } catch (err) {
-    // Handle error by retrying the function
-    console.error(`Error in handleAnswerTimeExceeded: ${err}`)
-  }
-}
-
 const sendEndMsg = async (ctx) => {
   try {
     ctx.session.customData = []
@@ -93,7 +51,49 @@ async function sendNextMsg(ctx, answersLength, questionsLength) {
   }
 }
 
-const sendNextMsgDebounced = debounce(sendNextMsg);
+function userPanel(QuestionRepository) {
+  return async (ctx) => {
+    const group = ctx.session.user.Group
+    ctx.session.photo = []
+    ctx.session.customData = []
+    ctx.session.debounceFunc = debounce(sendNextMsg);
+
+    try {
+      const questions = await QuestionRepository.getQuestions(group)
+      ctx.session.questions = questions
+      ctx.session.scene = 'sending_photo'
+      // check required parameters and send message
+      await sendQestionMsg(ctx, 0)
+      await deleteMessage(ctx);
+    } catch (err) {
+      if (questions.length <= 0) {
+        console.log('В базе нету вопросов')
+        sendEndMsg(ctx)
+      } else {
+        console.error('user.service > userPanel ' + err)
+      }
+    }
+  }
+}
+
+// Helper function to check if user took too long to answer
+const checkAnswerTime = (ctx, customData) => (customData.at(-1) <= ctx.update.message.date - 5 * 60) ? true : false
+
+async function handleAnswerTimeExceeded(ctx, answers) {
+  try {
+    // Notify user and reset session data
+    await retry(async () => await ctx.reply('Вы не уложились в 5 минут.\nПройдите проверку заново'), options)
+    answers = []
+    ctx.session.customData = []
+
+    // Send first question again
+    await retry(async () => await sendQestionMsg(ctx, 0), options)
+    console.log(`${ctx.session.user.Name} :>> Answer time exceeded`);
+  } catch (err) {
+    // Handle error by retrying the function
+    console.error(`Error in handleAnswerTimeExceeded: ${err}`)
+  }
+}
 
 // Helper function to handle callback query
 async function handleCallbackQuery(ctx, answers, questions) {
@@ -111,6 +111,7 @@ async function handlePhotoMessage(ctx, answers, questions) {
   const fileName = questions[answers.length].Name //trow error
   const msgDate = ctx.update.message.date
   const customData = ctx.session.customData
+  const sendNextMsgDebounced = ctx.session.debounceFunc
 
   if (checkAnswerTime(ctx, customData)) {
     handleAnswerTimeExceeded(ctx, answers)
@@ -253,6 +254,7 @@ function saveToGoogle(GoogleRepository) {
       await ctx.editMessageText('Все фотографии отправленны ✅')
       ctx.session.photo = []
       ctx.session.scene = ''
+      delete ctx.session.debounceFunc
     } catch (err) {
       if (err) {
         console.error('user.service > saveToGoogle ' + err)
