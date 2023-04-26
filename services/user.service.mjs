@@ -38,7 +38,7 @@ async function handleAnswerTimeExceeded(ctx, answers) {
 
     // Send first question again
     await retry(async () => await sendQestionMsg(ctx, 0), options)
-    console.log('Answer time exceeded');
+    console.log(`${ctx.session.user.Name} :>> Answer time exceeded`);
   } catch (err) {
     // Handle error by retrying the function
     console.error(`Error in handleAnswerTimeExceeded: ${err}`)
@@ -55,6 +55,7 @@ const sendEndMsg = async (ctx) => {
         .row()
         .text('Отправить проверяющему', 'sendPhotos'),
     }))
+    console.log(`${ctx.session.user.Name} :>> Send end message`)
   } catch (err) {
     console.error(`Error sending end message: ${err.message}`);
   }
@@ -75,7 +76,7 @@ const sendQestionMsg = async (ctx, questionNumber) => {
         await ctx.reply(question.Text)
       }
     }, options)
-    console.log(`Send question: ${question.Name} to ${ctx.session.user.Name}`)
+    console.log(`${ctx.session.user.Name} :>> Send question: ${question.Name}`)
   } catch (err) {
     console.error(`Error in sendQestionMsg: ${err}`)
   }
@@ -143,7 +144,7 @@ function getPhotoAnswer() {
       if (!ctx.update.message?.photo && ctx.callbackQuery?.data !== 'skip_photo') {
         ctx.session.scene = ''
         await ctx.reply('Вы прервали прошлую проверку😔\n\nНажмите кнопку "Да" ещё раз🙏')
-        console.log(`Send Alert about interrupted previous check to ${ctx.session.user.Name}`)
+        console.log(`${ctx.session.user.Name} :>> Send Alert about interrupted previous check`)
         return
       }
 
