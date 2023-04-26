@@ -36,8 +36,9 @@ function getAllUsers(usersRepository) {
   return async (ctx) => {
     try {
       const users = await usersRepository.getAllUsers()
+      const sortUsers = users.sort((a, b) => a.Name.split(' ')[1] - b.Name.split(' ')[1])
       const markup = new InlineKeyboard()
-      users.forEach((item) => {
+      sortUsers.forEach((item) => {
         markup.text(item.Name, `userId_${item.Id}`).row()
       })
       await ctx.reply('Все пользователи', {
