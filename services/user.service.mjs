@@ -99,7 +99,7 @@ async function handleCallbackQuery(ctx, answers, questions) {
   await deleteMessage(ctx);
   answers.push(null)
   // Send next question or end message
-  sendNextMsg(ctx, answers, questions)
+  sendNextMsg(ctx, answers.length, questions.length)
 }
 
 // Helper function to handle photo message
@@ -143,6 +143,7 @@ function getPhotoAnswer() {
       if (!ctx.update.message?.photo && ctx.callbackQuery?.data !== 'skip_photo') {
         ctx.session.scene = ''
         await ctx.reply('Вы прервали прошлую проверку😔\n\nНажмите кнопку "Да" ещё раз🙏')
+        console.log(`Send Alert about interrupted previous check to ${ctx.session.user.Name}`)
         return
       }
 
