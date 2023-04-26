@@ -10,7 +10,8 @@ export function adminRoute(
   updateGroup,
   requestNewUserName,
   editUserName,
-  createUserFolder
+  createUserFolder,
+  sendReminderMessage
 ) {
   botInstance.callbackQuery('admin', adminPanel)
   botInstance.callbackQuery(/userId_\d+/, profile)
@@ -19,6 +20,7 @@ export function adminRoute(
   botInstance.callbackQuery(/access_\w+/, updateGroup)
   botInstance.callbackQuery(/editName_/, requestNewUserName)
   botInstance.callbackQuery(/createFolder_\d+/, createUserFolder)
+  botInstance.callbackQuery(/sendReminder_\d+/, sendReminderMessage)
 
   botInstance.hears('Найти пользователя', search)
   botInstance.hears('Показать всех пользователей', getAllProfile)

@@ -1,11 +1,8 @@
 import { InlineKeyboard } from 'grammy'
 import retry from 'async-retry';
-import { options } from '../variables.mjs'
+import { options, REMINDER_MSG_TEXT } from '../variables.mjs'
+import { deleteMessage } from '../utils.mjs'
 
-const MSG_TEXT =
-  'Приветствую! Необходимо пройти проверку стандартов обслуживания.👋\n\n' +
-  'У вас есть 5 минут на то, что бы сделать фото и отправить его.⏳\n\n' +
-  'Вы готовы приступить❔'
 const HOUR_WAIT = 1
 
 const markup = {
@@ -22,11 +19,11 @@ const sendRemindersToAll = async (botInstance, UsersRepository) => {
     const promises = users.map(async (e) => {
       const id = e.Id
       try {
-        await botInstance.api.sendMessage(id, MSG_TEXT, markup)
+        await botInstance.api.sendMessage(id, REMINDER_MSG_TEXT, markup)
         await new Promise(resolve => setTimeout(resolve, 500))
       } catch (err) {
         console.error('Error sending message to user:', id, err)
-        await retry(async () => await botInstance.api.sendMessage(id, MSG_TEXT, markup), options)
+        await retry(async () => await botInstance.api.sendMessage(id, REMINDER_MSG_TEXT, markup), options)
       }
     })
     await Promise.all(promises)
@@ -37,12 +34,9 @@ const sendRemindersToAll = async (botInstance, UsersRepository) => {
 
 const sendReminderToOne = async (ctx) => {
   try {
-    try {
-      await ctx.deleteMessage();
-    } catch (err) {
-    }
+    deleteMessage(ctx)
     await new Promise(resolve => setTimeout(resolve, 1000 * 60 * 60 * HOUR_WAIT))
-    await retry(async () => await ctx.reply(MSG_TEXT, markup), options)
+    await retry(async () => await ctx.reply(REMINDER_MSG_TEXT, markup), options)
   } catch (err) {
     console.error('Error sending reminder to user:', err)
   }

@@ -29,6 +29,7 @@ import {
   requestNewUserName,
   editUserName,
   createUserFolder,
+  sendReminderMessageForUser
 } from './services/admin.service.mjs'
 
 import { sheduleRoute } from './bot/schedule.route.mjs'
@@ -90,7 +91,8 @@ initBase(new GroupRepository()).then(async () => {
       updateGroup(new UsersRepository()),
       requestNewUserName(),
       editUserName(new UsersRepository()),
-      createUserFolder(bot, utilsGDrive, new UsersRepository())
+      createUserFolder(bot, utilsGDrive, new UsersRepository()),
+      sendReminderMessageForUser(bot)
     )
 
     sheduleRoute(
@@ -123,6 +125,10 @@ initBase(new GroupRepository()).then(async () => {
       redirectUpdateQuestion(),
       updateQuestionData(new QuestionRepository())
     )
+
+    bot.api.setMyCommands([
+      { command: "start", description: "Start the bot" },
+    ])
 
     bot.catch((err) => {
       const ctx = err.ctx;

@@ -1,18 +1,7 @@
 import { InlineKeyboard } from 'grammy'
 import retry from 'async-retry';
-import { options } from '../variables.mjs'
-
-const MSG_TEXT = `Вы отправили все требуемые фотографии!👍\n\n` +
-  `Проверьте все фото перед отправкой🧐\n\n` +
-  `❗Если вы допустили ошибку можете изменить отправленную фотографию\n` +
-  `Для этого нажмите "Показать все фото" и выберите фото, которое надо заменить❗`
-
-const deleteMessage = async (ctx) => {
-  try {
-    await ctx.deleteMessage();
-  } catch (err) {
-  }
-}
+import { options, END_MSG_TEXT } from '../variables.mjs'
+import { debounce, deleteMessage } from '../utils.mjs';
 
 function userPanel(QuestionRepository) {
   return async (ctx) => {
@@ -52,32 +41,22 @@ async function handleAnswerTimeExceeded(ctx, answers) {
     console.log('Answer time exceeded');
   } catch (err) {
     // Handle error by retrying the function
-    console.log(`Error in handleAnswerTimeExceeded: ${err}`)
+    console.error(`Error in handleAnswerTimeExceeded: ${err}`)
   }
-}
-
-const debounce = (callback, timeoutDelay = 500) => {
-  let timeoutId;
-
-  return (...rest) => {
-    clearTimeout(timeoutId);
-
-    timeoutId = setTimeout(() => callback.apply(this, rest), timeoutDelay);
-  };
 }
 
 const sendEndMsg = async (ctx) => {
   try {
     ctx.session.customData = []
     ctx.session.scene = 'end_msg'
-    await retry(async () => await ctx.reply(MSG_TEXT, {
+    await retry(async () => await ctx.reply(END_MSG_TEXT, {
       reply_markup: new InlineKeyboard()
         .text('Показать все фото', 'showPhotos')
         .row()
         .text('Отправить проверяющему', 'sendPhotos'),
     }))
   } catch (err) {
-    console.log(`Error sending end message: ${err.message}`);
+    console.error(`Error sending end message: ${err.message}`);
   }
 }
 
@@ -86,7 +65,6 @@ const sendQestionMsg = async (ctx, questionNumber) => {
   const question = questions[questionNumber]
 
   try {
-    console.log(question.Name)
     await retry(async () => {
       if (question.Require) {
         await ctx.reply(ctx.session.questions[questionNumber].Text, {
@@ -97,8 +75,9 @@ const sendQestionMsg = async (ctx, questionNumber) => {
         await ctx.reply(question.Text)
       }
     }, options)
+    console.log(`Send question: ${question.Name} to ${ctx.session.user.Name}`)
   } catch (err) {
-    console.log(`Error in sendQestionMsg: ${err}`)
+    console.error(`Error in sendQestionMsg: ${err}`)
   }
 }
 

@@ -1,5 +1,7 @@
 import { Keyboard } from 'grammy'
 import { InlineKeyboard } from 'grammy'
+import { options, REMINDER_MSG_TEXT } from '../variables.mjs'
+import retry from 'async-retry';
 
 function adminPanel() {
   return async (ctx) => {
@@ -55,6 +57,36 @@ function userProfile(usersRepository) {
 
     try {
       const user = await usersRepository.getUser(id)
+
+      const markup = new InlineKeyboard()
+        .text(
+          user.Group == 'admin'
+            ? 'Разжаловать'
+            : 'Повысить до администратора',
+          `promote_${user.Id}`
+        )
+        .row()
+        .text(
+          user.Group !== 'waitConfirm'
+            ? 'Ограничить доступ'
+            : 'Выдать доступ',
+          `wait_${user.Id}`
+        )
+
+      if (user.Group === 'azs' || user.Group === 'azsWithStore') {
+        markup
+          .row()
+          .text(
+            user.Group == 'azs'
+              ? 'Изменить роль на АЗС с магазином'
+              : 'Изменить роль на АЗС без магазина(киоск)',
+            `updateGroup_${user.Id}`
+          )
+          .row()
+          .text('Отправить напоминание', `sendReminder_${user.Id}`)
+      }
+
+
       return await ctx.reply(
         `Информация о пользователе: \n` +
         `Дата регистрации: ${new Date(user.createdDate).toLocaleDateString()}\n` +
@@ -63,20 +95,7 @@ function userProfile(usersRepository) {
         `Роль: ${user.Group}\n` +
         `Личная папка: ${user.UserFolder}`,
         {
-          reply_markup: new InlineKeyboard()
-            .text(
-              user.Group == 'admin'
-                ? 'Разжаловать'
-                : 'Повысить до администратора',
-              `promote_${user.Id}`
-            )
-            .row()
-            .text(
-              user.Group !== 'waitConfirm'
-                ? 'Ограничить доступ'
-                : 'Выдать доступ',
-              `wait_${user.Id}`
-            ),
+          reply_markup: markup,
         }
       )
     } catch (err) {
@@ -232,6 +251,25 @@ function createUserFolder(
   }
 }
 
+function sendReminderMessageForUser(botInstance) {
+  return async (ctx) => {
+    const id = ctx.update.callback_query?.data.split('_')[1]
+    const markup = {
+      reply_markup: new InlineKeyboard()
+        .text('Да', 'startCheck')
+        .row()
+        .text('Нет', 'postponeСheck'),
+    }
+
+    try {
+      await retry(async () => await botInstance.api.sendMessage(id, REMINDER_MSG_TEXT, markup), options)
+      ctx.editMessageText('Уведомление отправленно!')
+    } catch (err) {
+      console.error('Error sending reminder to user:', err)
+    }
+  }
+}
+
 export {
   adminPanel,
   getAllUsers,
@@ -243,4 +281,5 @@ export {
   requestNewUserName,
   editUserName,
   createUserFolder,
+  sendReminderMessageForUser
 }
