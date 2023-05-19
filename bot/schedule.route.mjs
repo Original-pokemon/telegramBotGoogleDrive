@@ -1,8 +1,11 @@
-export function sheduleRoute(botInstance, schedule, sendReminder) {
-  schedule.scheduleJob({ hour: 13, minute: 10 }, async function () {
-    const sheduleTime = '00:00' //getDataBase TODO
+import { SHEDULE_TIME } from '../variables.mjs'
 
-    const [hour, minute] = sheduleTime.split(':')
+
+export function sheduleRoute(botInstance, schedule, sendReminder) {
+  schedule.scheduleJob({ hour: 0, minute: 0 }, async function () {
+    const sheduleTime = undefined //getDataBase TODO
+
+    const [hour, minute] = SHEDULE_TIME.split(':')
 
 
     const intervale =
