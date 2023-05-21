@@ -1,7 +1,13 @@
-import { Keyboard } from 'grammy'
-import { InlineKeyboard } from 'grammy'
-import { options, REMINDER_MSG_TEXT } from '../variables.mjs'
 import retry from 'async-retry';
+import {
+  InlineKeyboard,
+  Keyboard,
+} from 'grammy';
+
+import {
+  options,
+  REMINDER_MSG_TEXT,
+} from '../variables.mjs';
 
 function adminPanel() {
   return async (ctx) => {
@@ -13,10 +19,50 @@ function adminPanel() {
           .row()
           .text('Настроить время оповещения')
           .text('Настроить вопросы')
+          .row()
+          .text('Сделать рассылку')
           .resized(),
       })
     } catch (err) {
       console.error('adming.service > adminPanel' + err)
+    }
+  }
+}
+
+function newsletterPanel() {
+  return async (ctx) => {
+    const text = 'Отправьте текcт'
+    ctx.session.scene = 'enter_letter_text'
+
+    try {
+      ctx.reply(text)
+    } catch (err) {
+      console.error('adming.service > newsletterPanel' + err)
+    }
+  }
+}
+
+function sendNewsletterForAll(UsersRepository, botInstance) {
+  return async (ctx) => {
+    ctx.session.scene = ''
+    const messageText = ctx.msg.text
+    try {
+      const users = await UsersRepository.getAllAzs();
+
+      const promises = users.map(async (user) => {
+        const id = user.Id
+        try {
+          await botInstance.api.sendMessage(id, messageText)
+          await new Promise(resolve => setTimeout(resolve, 500))
+        } catch (err) {
+          console.error('Error sending message to user:', id)
+          await retry(async () => await botInstance.api.sendMessage(id, messageText), options)
+        }
+      })
+
+      await Promise.all(promises)
+    } catch(err) {
+      console.error('adming.service > sendNewsletterForAll' + err)
     }
   }
 }
@@ -273,14 +319,16 @@ function sendReminderMessageForUser(botInstance) {
 
 export {
   adminPanel,
-  getAllUsers,
-  userSearch,
-  userProfile,
-  userGroup,
-  userPromote,
-  updateGroup,
-  requestNewUserName,
-  editUserName,
   createUserFolder,
-  sendReminderMessageForUser
-}
+  editUserName,
+  getAllUsers,
+  newsletterPanel,
+  requestNewUserName,
+  sendNewsletterForAll,
+  sendReminderMessageForUser,
+  updateGroup,
+  userGroup,
+  userProfile,
+  userPromote,
+  userSearch,
+};

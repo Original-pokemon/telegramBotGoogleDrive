@@ -1,52 +1,63 @@
-import dotenv from 'dotenv'
-import { Bot, session, GrammyError, HttpError } from 'grammy'
-import { Router } from '@grammyjs/router'
-import { hydrateFiles } from '@grammyjs/files'
-import * as schedule from 'node-schedule'
-import { initGoogleDrive } from './google-drive/initGoogleDrive.mjs'
+import dotenv from 'dotenv';
+import {
+  Bot,
+  GrammyError,
+  HttpError,
+  session,
+} from 'grammy';
+import * as schedule from 'node-schedule';
 
-import { initBase } from './postgres-node/initBase.mjs'
+import { hydrateFiles } from '@grammyjs/files';
+import { Router } from '@grammyjs/router';
 
-import { authMiddleware } from './middleware/auth.mw.mjs'
-import { responseTimeMiddleware } from './middleware/responseTime.mw.mjs'
-
-import { GroupRepository } from './repositories/group.repositoy.mjs'
-import { UsersRepository } from './repositories/user.repository.mjs'
-import { QuestionRepository } from './repositories/question.repository.mjs'
-
-import { startRoute } from './bot/start.route.mjs'
-import { start } from './services/start.service.mjs'
-
-import { adminRoute } from './bot/admin.route.mjs'
+import { adminRoute } from './bot/admin.route.mjs';
+import { questionSettingRoute } from './bot/questionSetting.route.mjs';
+import { sheduleRoute } from './bot/schedule.route.mjs';
+import { startRoute } from './bot/start.route.mjs';
+import { userRoute } from './bot/user.route.mjs';
+import { initGoogleDrive } from './google-drive/initGoogleDrive.mjs';
+import { authMiddleware } from './middleware/auth.mw.mjs';
+import { responseTimeMiddleware } from './middleware/responseTime.mw.mjs';
+import { initBase } from './postgres-node/initBase.mjs';
+import { GroupRepository } from './repositories/group.repositoy.mjs';
+import { QuestionRepository } from './repositories/question.repository.mjs';
+import { UsersRepository } from './repositories/user.repository.mjs';
 import {
   adminPanel,
-  userSearch,
-  userProfile,
-  getAllUsers,
-  userPromote,
-  userGroup,
-  updateGroup,
-  requestNewUserName,
-  editUserName,
   createUserFolder,
-  sendReminderMessageForUser
-} from './services/admin.service.mjs'
-
-import { sheduleRoute } from './bot/schedule.route.mjs'
-import { sendReminderMessage } from './services/schedule.service.mjs'
-
-import { userRoute } from './bot/user.route.mjs'
+  editUserName,
+  getAllUsers,
+  newsletterPanel,
+  requestNewUserName,
+  sendNewsletterForAll,
+  sendReminderMessageForUser,
+  updateGroup,
+  userGroup,
+  userProfile,
+  userPromote,
+  userSearch,
+} from './services/admin.service.mjs';
 import {
-  userPanel,
-  getPhotoAnswer,
-  showPhotos,
+  addQuestion,
+  checkAzsType,
+  deleteQuestion,
+  questionPanel,
+  questionProfile,
+  redirectUpdateQuestion,
+  sendEditMessagePanel,
+  showQuestionList,
+  updateQuestionData,
+} from './services/questionSetting.service.mjs';
+import { sendReminderMessage } from './services/schedule.service.mjs';
+import { start } from './services/start.service.mjs';
+import {
   editPhoto,
   editPhotoPanel,
+  getPhotoAnswer,
   saveToGoogle,
-} from './services/user.service.mjs'
-
-import { questionSettingRoute } from './bot/questionSetting.route.mjs'
-import { questionPanel, questionProfile, showQuestionList, addQuestion, checkAzsType, deleteQuestion, sendEditMessagePanel, redirectUpdateQuestion, updateQuestionData } from './services/questionSetting.service.mjs'
+  showPhotos,
+  userPanel,
+} from './services/user.service.mjs';
 
 dotenv.config()
 
@@ -92,7 +103,9 @@ initBase(new GroupRepository()).then(async () => {
       requestNewUserName(),
       editUserName(new UsersRepository()),
       createUserFolder(bot, utilsGDrive, new UsersRepository()),
-      sendReminderMessageForUser(bot)
+      sendReminderMessageForUser(bot),
+      newsletterPanel(),
+      sendNewsletterForAll(new UsersRepository(), bot)
     )
 
     sheduleRoute(

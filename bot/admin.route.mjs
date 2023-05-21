@@ -11,7 +11,9 @@ export function adminRoute(
   requestNewUserName,
   editUserName,
   createUserFolder,
-  sendReminderMessage
+  sendReminderMessage,
+  newsletterPanel,
+  sendLetterText,
 ) {
   botInstance.callbackQuery('admin', adminPanel)
   botInstance.callbackQuery(/userId_\d+/, profile)
@@ -24,8 +26,10 @@ export function adminRoute(
 
   botInstance.hears('Найти пользователя', search)
   botInstance.hears('Показать всех пользователей', getAllProfile)
+  botInstance.hears('Сделать рассылку', newsletterPanel)
 
   router.route('enter_id', profile)
   router.route('enter_name', editUserName)
+  router.route('enter_letter_text', sendLetterText)
 
 }
