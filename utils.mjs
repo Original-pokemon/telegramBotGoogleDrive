@@ -1,3 +1,7 @@
+import retry from 'async-retry';
+
+import { options } from './variables.mjs';
+
 const debounce = (callback, timeoutDelay = 500) => {
   let timeoutId;
 
@@ -8,11 +12,12 @@ const debounce = (callback, timeoutDelay = 500) => {
   };
 }
 
-const deleteMessage = async (ctx) => {
+const deleteMessage = async (context) => {
   try {
-    await ctx.deleteMessage();
-  } catch (err) {
+    await retry(async () => await context.deleteMessage(), options);
+  } catch (error) {
+    console.error(`Error in delete func: ${error}`);
   }
 }
 
-export { debounce, deleteMessage }
+export { debounce, deleteMessage };
