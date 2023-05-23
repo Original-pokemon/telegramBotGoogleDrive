@@ -1,7 +1,14 @@
-import { InlineKeyboard } from 'grammy'
 import retry from 'async-retry';
-import { options, END_MSG_TEXT } from '../variables.mjs'
-import { debounce, deleteMessage } from '../utils.mjs';
+import { InlineKeyboard } from 'grammy';
+
+import {
+  debounce,
+  deleteMessage,
+} from '../utils.mjs';
+import {
+  END_MSG_TEXT,
+  options,
+} from '../variables.mjs';
 
 const sendEndMsg = async (ctx) => {
   try {
@@ -79,11 +86,10 @@ function userPanel(QuestionRepository) {
 // Helper function to check if user took too long to answer
 const checkAnswerTime = (ctx, customData) => (customData.at(-1) <= ctx.update.message.date - 5 * 60) ? true : false
 
-async function handleAnswerTimeExceeded(ctx, answers) {
+async function handleAnswerTimeExceeded() {
   try {
     // Notify user and reset session data
     await retry(async () => await ctx.reply('Вы не уложились в 5 минут.\nПройдите проверку заново'), options)
-    answers = []
     ctx.session.customData = []
 
     // Send first question again
@@ -114,7 +120,8 @@ async function handlePhotoMessage(ctx, answers, questions) {
   const sendNextMsgDebounced = ctx.session.debounceFunc
 
   if (checkAnswerTime(ctx, customData)) {
-    handleAnswerTimeExceeded(ctx, answers)
+    handleAnswerTimeExceeded(ctx)
+    answers = []
     return
   }
 
@@ -310,10 +317,10 @@ async function sendPhotosToDrive(GoogleRepository, arr, folderId) {
 }
 
 export {
-  userPanel,
-  getPhotoAnswer,
-  showPhotos,
   editPhoto,
   editPhotoPanel,
+  getPhotoAnswer,
   saveToGoogle,
-}
+  showPhotos,
+  userPanel,
+};
