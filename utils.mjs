@@ -1,23 +1,31 @@
 import retry from 'async-retry';
+import dayjs from 'dayjs';
 
 import { options } from './variables.mjs';
 
-const debounce = (callback, timeoutDelay = 500) => {
-  let timeoutId;
-
-  return (...rest) => {
-    clearTimeout(timeoutId);
-
-    timeoutId = setTimeout(() => callback.apply(this, rest), timeoutDelay);
-  };
-}
+const dateOverdue = (messageDate) =>
+  messageDate && dayjs().isAfter(messageDate);
 
 const deleteMessage = async (context) => {
   try {
-    await retry(async () => await context.deleteMessage(), options);
+    const messageDate =
+      context.update.message?.date ||
+      context.update.callback_query?.message.date;
+    const oneDayMore = dayjs(messageDate * 1000).add(1, 'day');
+
+    if (dateOverdue(oneDayMore)) {
+      return true;
+    }
+
+    await retry(async () => {
+      await context.deleteMessage();
+    }, options);
+
+    return true;
   } catch (error) {
     console.error(`Error in delete func: ${error}`);
+    return false;
   }
-}
+};
 
-export { debounce, deleteMessage };
+export { dateOverdue, deleteMessage };

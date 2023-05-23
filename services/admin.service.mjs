@@ -1,18 +1,13 @@
 import retry from 'async-retry';
-import {
-  InlineKeyboard,
-  Keyboard,
-} from 'grammy';
+import { InlineKeyboard, Keyboard } from 'grammy';
+import _ from 'lodash';
 
-import {
-  options,
-  REMINDER_MSG_TEXT,
-} from '../variables.mjs';
+import { options, REMINDER_MSG_TEXT } from '../variables.mjs';
 
 function adminPanel() {
-  return async (ctx) => {
+  return async (context) => {
     try {
-      await ctx.reply('Управляйте пользователями', {
+      await context.reply('Управляйте пользователями', {
         reply_markup: new Keyboard()
           .text('Показать всех пользователей')
           .text('Найти пользователя')
@@ -22,103 +17,110 @@ function adminPanel() {
           .row()
           .text('Сделать рассылку')
           .resized(),
-      })
-    } catch (err) {
-      console.error('adming.service > adminPanel' + err)
+      });
+    } catch (error) {
+      console.error(`adming.service > adminPanel${error}`);
     }
-  }
+  };
 }
 
 function newsletterPanel() {
-  return async (ctx) => {
-    const text = 'Отправьте текcт'
-    ctx.session.scene = 'enter_letter_text'
+  return async (context) => {
+    const text = 'Отправьте текcт';
+    context.session.scene = 'enter_letter_text';
 
     try {
-      ctx.reply(text)
-    } catch (err) {
-      console.error('adming.service > newsletterPanel' + err)
+      context.reply(text);
+    } catch (error) {
+      console.error(`adming.service > newsletterPanel${error}`);
     }
-  }
+  };
 }
 
 function sendNewsletterForAll(UsersRepository, botInstance) {
-  return async (ctx) => {
-    ctx.session.scene = ''
-    const messageText = ctx.msg.text
+  return async (context) => {
+    context.session.scene = '';
+    const messageText = context.msg.text;
     try {
       const users = await UsersRepository.getAllAzs();
 
       const promises = users.map(async (user) => {
-        const id = user.Id
+        const id = user.Id;
         try {
-          await botInstance.api.sendMessage(id, messageText)
-          await new Promise(resolve => setTimeout(resolve, 500))
-        } catch (err) {
-          console.error('Error sending message to user:', id)
-          await retry(async () => await botInstance.api.sendMessage(id, messageText), options)
+          await botInstance.api.sendMessage(id, messageText);
+          await new Promise((resolve) => {
+            setTimeout(resolve, 500);
+          });
+        } catch {
+          console.error('Error sending message to user:', id);
+          await retry(async () => {
+            await botInstance.api.sendMessage(id, messageText);
+            return true;
+          }, options);
         }
-      })
+      });
 
-      await Promise.all(promises)
-    } catch(err) {
-      console.error('adming.service > sendNewsletterForAll' + err)
+      await Promise.all(promises);
+    } catch (error) {
+      console.error(`adming.service > sendNewsletterForAll${error}`);
     }
-  }
+  };
 }
 
 function userSearch() {
-  return async (ctx) => {
+  return async (context) => {
     try {
-      ctx.reply(`Введите ID пользователя`, {})
-      ctx.session.scene = 'enter_id'
-    } catch (err) {
-      console.error('admin.service > userSearch' + err)
+      context.reply(`Введите ID пользователя`, {});
+      context.session.scene = 'enter_id';
+    } catch (error) {
+      console.error(`admin.service > userSearch${error}`);
     }
-  }
+  };
 }
 
 function getAllUsers(usersRepository) {
-  return async (ctx) => {
+  return async (context) => {
     try {
-      const users = await usersRepository.getAllUsers()
-      const sortUsers = users.sort((a, b) => a.Name.split(' ')[1] - b.Name.split(' ')[1])
-      const markup = new InlineKeyboard()
-      sortUsers.forEach((item) => {
-        markup.text(item.Name, `userId_${item.Id}`).row()
-      })
-      await ctx.reply('Все пользователи', {
+      const users = await usersRepository.getAllUsers();
+      const sortUsers = _.sortBy(users, ['Name']);
+      //  = users.sort(
+      //   (a, b) => a.Name.split(' ')[1] - b.Name.split(' ')[1]
+      // );
+
+      const markup = new InlineKeyboard();
+
+      _.each(sortUsers, (user) =>
+        markup.text(user.Name, `userId_${user.Id}`).row()
+      );
+
+      await context.reply('Все пользователи', {
         reply_markup: markup,
-      })
-    } catch (err) {
-      console.error('admin.service > getAllUsers' + err)
+      });
+    } catch (error) {
+      console.error(`admin.service > getAllUsers${error}`);
     }
-  }
+  };
 }
 
 function userProfile(usersRepository) {
-  return async (ctx) => {
-    const calbackId = ctx.update.callback_query?.data.split('_')[1]
-    const id = calbackId ? calbackId : ctx.msg.text
-    ctx.session.scene = ''
+  return async (context) => {
+    const calbackId = context.update.callback_query?.data.split('_')[1];
+    const id = calbackId || context.msg.text;
+    context.session.scene = '';
 
     try {
-      const user = await usersRepository.getUser(id)
+      const user = await usersRepository.getUser(id);
 
       const markup = new InlineKeyboard()
         .text(
-          user.Group == 'admin'
-            ? 'Разжаловать'
-            : 'Повысить до администратора',
+          user.Group == 'admin' ? 'Разжаловать' : 'Повысить до администратора',
           `promote_${user.Id}`
         )
         .row()
         .text(
-          user.Group !== 'waitConfirm'
-            ? 'Ограничить доступ'
-            : 'Выдать доступ',
+          user.Group === 'waitConfirm' ? 'Выдать доступ' : 'Ограничить доступ',
           `wait_${user.Id}`
-        )
+        );
 
       if (user.Group === 'azs' || user.Group === 'azsWithStore') {
         markup
@@ -130,13 +132,14 @@ function userProfile(usersRepository) {
             `updateGroup_${user.Id}`
           )
           .row()
-          .text('Отправить напоминание', `sendReminder_${user.Id}`)
+          .text('Отправить напоминание', `sendReminder_${user.Id}`);
       }
 
-
-      return await ctx.reply(
+      return await context.reply(
         `Информация о пользователе: \n` +
-        `Дата регистрации: ${new Date(user.createdDate).toLocaleDateString()}\n` +
+        `Дата регистрации: ${new Date(
+          user.createdDate
+        ).toLocaleDateString()}\n` +
         `ID: ${user.Id}\n` +
         `Никнейм: ${user.Name}\n` +
         `Роль: ${user.Group}\n` +
@@ -144,87 +147,88 @@ function userProfile(usersRepository) {
         {
           reply_markup: markup,
         }
-      )
-    } catch (err) {
-      const errArr = err.message.split(':')
-      if (errArr[0] === `Ошибка в получении пользователя`) {
-        return await ctx.reply('Данный пользователь не найден!')
+      );
+    } catch (error) {
+      const errorArray = error.message.split(':');
+      if (errorArray[0] === `Ошибка в получении пользователя`) {
+        return await context.reply('Данный пользователь не найден!');
       }
-      console.error('admin.service > userProfile' + err)
+      console.error(`admin.service > userProfile${error}`);
     }
-  }
+  };
 }
 
 function userPromote(usersRepository) {
-  return async (ctx) => {
+  return async (context) => {
     try {
-      const id = ctx.update.callback_query?.data.split('_')[1]
-      const user = await usersRepository.getUser(id)
+      const id = context.update.callback_query?.data.split('_')[1];
+      const user = await usersRepository.getUser(id);
 
-      if (!ctx.session.isAdmin && !ctx.session.isTopAdmin)
-        return await ctx.editMessageText('Вы не администратор!')
+      if (!context.session.isAdmin && !context.session.isTopAdmin)
+        return await context.editMessageText('Вы не администратор!');
 
       if (user.Group == 'admin') {
-        await usersRepository.updateUser(id, user.Name, 'waitConfirm')
-        return await ctx.editMessageText('Пользователь успешно понижен!')
-      } else if (user.Group != 'admin') {
-        await usersRepository.updateUser(id, user.Name, 'admin')
-        return await ctx.editMessageText('Пользователь успешно повышен!')
+        await usersRepository.updateUser(id, user.Name, 'waitConfirm');
+        return await context.editMessageText('Пользователь успешно понижен!');
       }
-    } catch (err) {
-      console.error('admin.service > userPromote' + err)
+      if (user.Group != 'admin') {
+        await usersRepository.updateUser(id, user.Name, 'admin');
+        return await context.editMessageText('Пользователь успешно повышен!');
+      }
+    } catch (error) {
+      console.error(`admin.service > userPromote${error}`);
     }
-  }
+  };
 }
 
 function userGroup(usersRepository) {
-  return async (ctx) => {
+  return async (context) => {
     try {
-      const id = ctx.update.callback_query?.data.split('_')[1]
-      const user = await usersRepository.getUser(id)
+      const id = context.update.callback_query?.data.split('_')[1];
+      const user = await usersRepository.getUser(id);
 
-      if (!ctx.session.isAdmin && !ctx.session.isTopAdmin)
-        return await ctx.editMessageText('Вы не администратор!')
+      if (!context.session.isAdmin && !context.session.isTopAdmin)
+        return await context.editMessageText('Вы не администратор!');
 
-      if (id == ctx.session.user.id)
-        return await ctx.editMessageText(
+      if (id == context.session.user.id)
+        return await context.editMessageText(
           'Вы не можете ограничить доступ самому себе!'
-        )
-      if (user.Group == 'admin' && !ctx.session.isTopAdmin)
-        return await ctx.editMessageText(
+        );
+      if (user.Group == 'admin' && !context.session.isTopAdmin)
+        return await context.editMessageText(
           'Вы не можете  ограничить доступ администратору!'
-        )
+        );
 
       if (user.Group == 'waitConfirm') {
-        await ctx.editMessageText('Выберите тип АЗС', {
+        await context.editMessageText('Выберите тип АЗС', {
           reply_markup: new InlineKeyboard()
             .text('Азс без магазина', `access_azs_${id}`)
             .row()
             .text('Азс с магазином', `access_azsWithStore_${id}`),
-        })
+        });
       } else if (
         user.Group == 'azs' ||
         user.Group == 'azsWithoutStore' ||
         user.Group == 'admin'
       ) {
-        await usersRepository.updateUser(id, user.Name, 'waitConfirm')
-        await ctx.editMessageText('Пользователю успешно ограничен доступ!')
+        await usersRepository.updateUser(id, user.Name, 'waitConfirm');
+        await context.editMessageText('Пользователю успешно ограничен доступ!');
       }
-    } catch (err) {
-      console.error('admin.service > userGroup' + err)
+    } catch (error) {
+      console.error(`admin.service > userGroup${error}`);
     }
-  }
+  };
 }
 
 function updateGroup(usersRepository) {
-  return async (ctx) => {
-    const id = ctx.update.callback_query?.data.split('_')[2]
-    const azsType = ctx.update.callback_query?.data.split('_')[1]
-    const user = await usersRepository.getUser(id)
+  return async (context) => {
+    const id = context.update.callback_query?.data.split('_')[2];
+    const azsType = context.update.callback_query?.data.split('_')[1];
+    const user = await usersRepository.getUser(id);
 
-    await usersRepository.updateUser(id, user.Name, azsType)
+    await usersRepository.updateUser(id, user.Name, azsType);
 
-    ctx.editMessageText(
+    context.editMessageText(
       `Изменить имя пользователя ?\nТекущее имя: ${user.Name}\n\nШаблон: [azs][num]`,
       {
         reply_markup: new InlineKeyboard()
@@ -232,89 +236,90 @@ function updateGroup(usersRepository) {
           .row()
           .text('Оставить как есть и выдать доступ', `createFolder_${id}`),
       }
-    )
-  }
+    );
+  };
 }
 
 function requestNewUserName() {
-  return async (ctx) => {
-    const id = ctx.update.callback_query?.data.split('_')[1]
+  return async (context) => {
+    const id = context.update.callback_query?.data.split('_')[1];
 
     try {
-      ctx.editMessageText(`Введите новое имя пользователя`, {})
-      ctx.session.scene = 'enter_name'
-      ctx.session.customData.id = id
-    } catch (err) {
-      console.error('admin.service > requestNewUserName ' + err)
+      context.editMessageText(`Введите новое имя пользователя`, {});
+      context.session.scene = 'enter_name';
+      context.session.id = id;
+    } catch (error) {
+      console.error(`admin.service > requestNewUserName ${error}`);
     }
-  }
+  };
 }
 
 function editUserName(usersRepository) {
-  return async (ctx) => {
-    const id = ctx.session.customData.id
-    const newName = ctx.msg.text
+  return async (context) => {
+    const { id } = context.session;
+    const newName = context.msg.text;
     try {
-      const user = await usersRepository.getUser(id)
-      await usersRepository.updateUser(id, newName, user.Group)
-      ctx.reply('Имя успешно обновлено', {
+      const user = await usersRepository.getUser(id);
+      await usersRepository.updateUser(id, newName, user.Group);
+      context.reply('Имя успешно обновлено', {
         reply_markup: new InlineKeyboard().text(
           'Выдать доступ',
           `createFolder_${id}`
         ),
-      })
-      ctx.session.scene = ''
-      delete ctx.session.customData.id
-    } catch (err) {
-      console.error('admin.service > editUserName ' + err)
+      });
+      context.session.scene = '';
+      delete context.session.id;
+    } catch (error) {
+      console.error(`admin.service > editUserName ${error}`);
     }
-  }
+  };
 }
 
-function createUserFolder(
-  botInstance,
-  Googlerepository,
-  UsersRepository
-) {
-  return async (ctx) => {
+function createUserFolder(botInstance, Googlerepository, UsersRepository) {
+  return async (context) => {
     try {
-      const id = ctx.update.callback_query?.data.split('_')[1]
-      const user = await UsersRepository.getUser(id)
+      const id = context.update.callback_query?.data.split('_')[1];
+      const user = await UsersRepository.getUser(id);
       const res = await Googlerepository.makeFolder({
         folderName: user.Name,
-        parentIdentifiers: { fileName: process.env.MAIN_FOLDER_NAME }
-      })
-      await UsersRepository.updateUser(id, user.Name, user.Group, res)
-      console.log('Success created userFolder:', res)
-      ctx.editMessageText(`Успешно создана папка: ${user.Name}\nid: ${res}`)
+        parentIdentifiers: { fileName: process.env.MAIN_FOLDER_NAME },
+      });
+      await UsersRepository.updateUser(id, user.Name, user.Group, res);
+      console.log('Success created userFolder:', res);
+      context.editMessageText(
+        `Успешно создана папка: ${user.Name}\nid: ${res}`
+      );
       botInstance.api.sendMessage(
         id,
         `Вам успешно выдали доступ\nВаше имя: ${user.Name}`
-      )
-    } catch (err) {
-      console.error('admin.service > createFolder: ', err);
+      );
+    } catch (error) {
+      console.error('admin.service > createFolder:', error);
     }
-
-  }
+  };
 }
 
 function sendReminderMessageForUser(botInstance) {
-  return async (ctx) => {
-    const id = ctx.update.callback_query?.data.split('_')[1]
+  return async (context) => {
+    const id = context.update.callback_query?.data.split('_')[1];
     const markup = {
       reply_markup: new InlineKeyboard()
         .text('Да', 'startCheck')
         .row()
         .text('Нет', 'postponeСheck'),
-    }
+    };
 
     try {
-      await retry(async () => await botInstance.api.sendMessage(id, REMINDER_MSG_TEXT, markup), options)
-      ctx.editMessageText('Уведомление отправленно!')
-    } catch (err) {
-      console.error('Error sending reminder to user:', err)
+      await retry(
+        async () =>
+          await botInstance.api.sendMessage(id, REMINDER_MSG_TEXT, markup),
+        options
+      );
+      context.editMessageText('Уведомление отправленно!');
+    } catch (error) {
+      console.error('Error sending reminder to user:', error);
     }
-  }
+  };
 }
 
 export {

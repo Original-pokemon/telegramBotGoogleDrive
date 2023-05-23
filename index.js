@@ -1,10 +1,5 @@
 import dotenv from 'dotenv';
-import {
-  Bot,
-  GrammyError,
-  HttpError,
-  session,
-} from 'grammy';
+import { Bot, GrammyError, HttpError, session } from 'grammy';
 import * as schedule from 'node-schedule';
 
 import { hydrateFiles } from '@grammyjs/files';
@@ -59,18 +54,18 @@ import {
   userPanel,
 } from './services/user.service.mjs';
 
-dotenv.config()
+dotenv.config();
 
 initBase(new GroupRepository()).then(async () => {
   initGoogleDrive({
     credentials: './credentials.json',
-    token: './token.json'
+    token: './token.json',
   }).then((utilsGDrive) => {
-    const bot = new Bot(process.env.BOT_TOKEN)
+    const bot = new Bot(process.env.BOT_TOKEN);
 
-    bot.api.config.use(hydrateFiles(bot.token))
+    bot.api.config.use(hydrateFiles(bot.token));
 
-    const router = new Router((ctx) => ctx.session.scene)
+    const router = new Router((context) => context.session.scene);
     bot.use(
       session({
         initial: () => ({
@@ -78,17 +73,14 @@ initBase(new GroupRepository()).then(async () => {
           isAdmin: false,
           user: {},
           isTopAdmin: false,
-          customData: {},
-          questions: [],
-          photo: [],
         }),
       })
-    )
-    bot.use(authMiddleware(bot, new UsersRepository()))
-    bot.use(responseTimeMiddleware())
-    bot.use(router)
+    );
+    bot.use(authMiddleware(bot, new UsersRepository()));
+    bot.use(responseTimeMiddleware());
+    bot.use(router);
 
-    startRoute(bot, start())
+    startRoute(bot, start());
 
     adminRoute(
       bot,
@@ -106,13 +98,13 @@ initBase(new GroupRepository()).then(async () => {
       sendReminderMessageForUser(bot),
       newsletterPanel(),
       sendNewsletterForAll(new UsersRepository(), bot)
-    )
+    );
 
     sheduleRoute(
       bot,
       schedule,
       sendReminderMessage(bot, new UsersRepository())
-    )
+    );
 
     userRoute(
       bot,
@@ -123,7 +115,7 @@ initBase(new GroupRepository()).then(async () => {
       editPhotoPanel(),
       editPhoto(),
       saveToGoogle(utilsGDrive)
-    )
+    );
 
     questionSettingRoute(
       bot,
@@ -137,26 +129,24 @@ initBase(new GroupRepository()).then(async () => {
       sendEditMessagePanel(),
       redirectUpdateQuestion(),
       updateQuestionData(new QuestionRepository())
-    )
+    );
 
-    bot.api.setMyCommands([
-      { command: "start", description: "Start the bot" },
-    ])
+    bot.api.setMyCommands([{ command: 'start', description: 'Start the bot' }]);
 
-    bot.catch((err) => {
-      const ctx = err.ctx;
+    bot.catch((error) => {
+      const { ctx } = error;
       console.error(`Error while handling update ${ctx.update.update_id}:`);
-      const e = err.error;
+      const e = error.error;
       if (e instanceof GrammyError) {
-        console.error("Error in request:", e.description);
+        console.error('Error in request:', e.description);
       } else if (e instanceof HttpError) {
-        console.error("Could not contact Telegram:", e);
+        console.error('Could not contact Telegram:', e);
       } else {
-        console.error("Unknown error:", e);
+        console.error('Unknown error:', e);
       }
     });
 
-    bot.start()
-    console.log('Bot started')
-  })
-})
+    bot.start();
+    console.log('Bot started');
+  });
+});
