@@ -156,7 +156,7 @@ async function handlePhotoMessage(context) {
 function getPhotoAnswer() {
   return async (context) => {
     const { message, callback_query: callbackQuery } = context.update;
-    if (message?.photo && !callbackQuery?.data) return;
+    if (!message?.photo && !callbackQuery?.data) return;
 
     try {
       // Check if user interrupted previous check
