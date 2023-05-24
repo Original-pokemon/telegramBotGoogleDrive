@@ -119,24 +119,27 @@ async function handlePhotoMessage(context) {
   const { answers, debounceFunc, questions } = context.session;
   if (answers.length === questions.length) return;
 
-  const fileName = questions[answers.length].Name;
-  const messageDate = context.update.message.date;
-  const sendNextMessageDebounced = debounceFunc;
-
   if (checkAnswerTime(context)) {
     handleAnswerTimeExceeded(context);
     context.session.answers = [];
     return;
   }
 
+  const fileName = questions[answers.length].Name;
+  const sendNextMessageDebounced = debounceFunc;
+  const messageDate = context.update.message.date;
+
   context.session.lastMessageDate = messageDate;
   // Get file with retry on HttpError
   try {
     const file = await retry(async () => {
       const respone = await context.getFile();
+
       return respone;
     }, options);
+
     const urlFile = file.getUrl();
+
     answers.push({
       fileName,
       urlFile,
@@ -152,14 +155,12 @@ async function handlePhotoMessage(context) {
 
 function getPhotoAnswer() {
   return async (context) => {
-    if (!context.update.message?.photo && !context.callbackQuery?.data) return;
+    const { message, callback_query: callbackQuery } = context.update;
+    if (message?.photo && !callbackQuery?.data) return;
 
     try {
       // Check if user interrupted previous check
-      if (
-        !context.update.message?.photo &&
-        context.callbackQuery?.data !== 'skip_photo'
-      ) {
+      if (!message?.photo && callbackQuery?.data !== 'skip_photo') {
         context.session.scene = '';
         await context.reply(
           'Вы прервали прошлую проверку😔\n\nНажмите кнопку "Да" ещё раз🙏'
@@ -173,6 +174,7 @@ function getPhotoAnswer() {
       // Check if scene is correct
       if (context.session.scene !== 'sending_photo') {
         await deleteMessage(context);
+        return;
       }
 
       // Handle callback query

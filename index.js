@@ -12,7 +12,7 @@ import { startRoute } from './bot/start.route.mjs';
 import { userRoute } from './bot/user.route.mjs';
 import { initGoogleDrive } from './google-drive/initGoogleDrive.mjs';
 import { authMiddleware } from './middleware/auth.mw.mjs';
-import { responseTimeMiddleware } from './middleware/responseTime.mw.mjs';
+import responseTimeMiddleware from './middleware/response-time.mw.mjs';
 import { initBase } from './postgres-node/initBase.mjs';
 import { GroupRepository } from './repositories/group.repositoy.mjs';
 import { QuestionRepository } from './repositories/question.repository.mjs';
