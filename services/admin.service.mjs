@@ -2,7 +2,7 @@ import retry from 'async-retry';
 import { InlineKeyboard, Keyboard } from 'grammy';
 import _ from 'lodash';
 
-import { options, REMINDER_MSG_TEXT } from '../variables.mjs';
+import { Options, REMINDER_MSG_TEXT } from '../variables.mjs';
 
 function adminPanel() {
   return async (context) => {
@@ -56,7 +56,7 @@ function sendNewsletterForAll(UsersRepository, botInstance) {
           await retry(async () => {
             await botInstance.api.sendMessage(id, messageText);
             return true;
-          }, options);
+          }, Options);
         }
       });
 
@@ -83,9 +83,6 @@ function getAllUsers(usersRepository) {
     try {
       const users = await usersRepository.getAllUsers();
       const sortUsers = _.sortBy(users, ['Name']);
-      //  = users.sort(
-      //   (a, b) => a.Name.split(' ')[1] - b.Name.split(' ')[1]
-      // );
 
       const markup = new InlineKeyboard();
 
@@ -111,9 +108,11 @@ function userProfile(usersRepository) {
     try {
       const user = await usersRepository.getUser(id);
 
-      const markup = new InlineKeyboard()
+      const markup = new InlineKeyboard();
+
+      markup
         .text(
-          user.Group == 'admin' ? 'Разжаловать' : 'Повысить до администратора',
+          user.Group === 'admin' ? 'Разжаловать' : 'Повысить до администратора',
           `promote_${user.Id}`
         )
         .row()
@@ -123,37 +122,41 @@ function userProfile(usersRepository) {
         );
 
       if (user.Group === 'azs' || user.Group === 'azsWithStore') {
+        const groupText =
+          user.Group === 'azs'
+            ? 'Изменить роль на АЗС с магазином'
+            : 'Изменить роль на АЗС без магазина(киоск)';
+
         markup
           .row()
-          .text(
-            user.Group == 'azs'
-              ? 'Изменить роль на АЗС с магазином'
-              : 'Изменить роль на АЗС без магазина(киоск)',
-            `updateGroup_${user.Id}`
-          )
+          .text(groupText, `updateGroup_${user.Id}`)
           .row()
           .text('Отправить напоминание', `sendReminder_${user.Id}`);
       }
 
-      return await context.reply(
-        `Информация о пользователе: \n` +
-        `Дата регистрации: ${new Date(
-          user.createdDate
-        ).toLocaleDateString()}\n` +
-        `ID: ${user.Id}\n` +
-        `Никнейм: ${user.Name}\n` +
-        `Роль: ${user.Group}\n` +
-        `Личная папка: ${user.UserFolder}`,
+      await context.reply(
+        `Информация о пользователе:
+Дата регистрации: ${new Date(user.createdDate).toLocaleDateString()}
+ID: ${user.Id}
+Никнейм: ${user.Name}
+Роль: ${user.Group}
+Личная папка: ${user.UserFolder}`,
         {
           reply_markup: markup,
         }
       );
+
+      return true;
     } catch (error) {
       const errorArray = error.message.split(':');
+
       if (errorArray[0] === `Ошибка в получении пользователя`) {
-        return await context.reply('Данный пользователь не найден!');
+        await context.reply('Данный пользователь не найден!');
+        return true;
       }
+
       console.error(`admin.service > userProfile${error}`);
+      return false;
     }
   };
 }
@@ -167,11 +170,11 @@ function userPromote(usersRepository) {
       if (!context.session.isAdmin && !context.session.isTopAdmin)
         return await context.editMessageText('Вы не администратор!');
 
-      if (user.Group == 'admin') {
+      if (user.Group === 'admin') {
         await usersRepository.updateUser(id, user.Name, 'waitConfirm');
         return await context.editMessageText('Пользователь успешно понижен!');
       }
-      if (user.Group != 'admin') {
+      if (user.Group !== 'admin') {
         await usersRepository.updateUser(id, user.Name, 'admin');
         return await context.editMessageText('Пользователь успешно повышен!');
       }
@@ -190,16 +193,16 @@ function userGroup(usersRepository) {
       if (!context.session.isAdmin && !context.session.isTopAdmin)
         return await context.editMessageText('Вы не администратор!');
 
-      if (id == context.session.user.id)
+      if (id === context.session.user.id)
         return await context.editMessageText(
           'Вы не можете ограничить доступ самому себе!'
         );
-      if (user.Group == 'admin' && !context.session.isTopAdmin)
+      if (user.Group === 'admin' && !context.session.isTopAdmin)
         return await context.editMessageText(
           'Вы не можете  ограничить доступ администратору!'
         );
 
-      if (user.Group == 'waitConfirm') {
+      if (user.Group === 'waitConfirm') {
         await context.editMessageText('Выберите тип АЗС', {
           reply_markup: new InlineKeyboard()
             .text('Азс без магазина', `access_azs_${id}`)
@@ -207,9 +210,9 @@ function userGroup(usersRepository) {
             .text('Азс с магазином', `access_azsWithStore_${id}`),
         });
       } else if (
-        user.Group == 'azs' ||
-        user.Group == 'azsWithoutStore' ||
-        user.Group == 'admin'
+        user.Group === 'azs' ||
+        user.Group === 'azsWithoutStore' ||
+        user.Group === 'admin'
       ) {
         await usersRepository.updateUser(id, user.Name, 'waitConfirm');
         await context.editMessageText('Пользователю успешно ограничен доступ!');
@@ -280,14 +283,14 @@ function createUserFolder(botInstance, Googlerepository, UsersRepository) {
     try {
       const id = context.update.callback_query?.data.split('_')[1];
       const user = await UsersRepository.getUser(id);
-      const res = await Googlerepository.makeFolder({
+      const response = await Googlerepository.makeFolder({
         folderName: user.Name,
         parentIdentifiers: { fileName: process.env.MAIN_FOLDER_NAME },
       });
-      await UsersRepository.updateUser(id, user.Name, user.Group, res);
-      console.log('Success created userFolder:', res);
+      await UsersRepository.updateUser(id, user.Name, user.Group, response);
+      console.log('Success created userFolder:', response);
       context.editMessageText(
-        `Успешно создана папка: ${user.Name}\nid: ${res}`
+        `Успешно создана папка: ${user.Name}\nid: ${response}`
       );
       botInstance.api.sendMessage(
         id,
@@ -313,7 +316,7 @@ function sendReminderMessageForUser(botInstance) {
       await retry(
         async () =>
           await botInstance.api.sendMessage(id, REMINDER_MSG_TEXT, markup),
-        options
+        Options
       );
       context.editMessageText('Уведомление отправленно!');
     } catch (error) {

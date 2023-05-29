@@ -1,11 +1,21 @@
 import retry from 'async-retry';
 import dayjs from 'dayjs';
 
-import { options } from './variables.mjs';
+import { Options } from './variables.mjs';
 
+/**
+ *
+ * @param {number} messageDate
+ * @returns {boolean} Result on overdue time
+ */
 const dateOverdue = (messageDate) =>
   messageDate && dayjs().isAfter(messageDate);
 
+/**
+ *
+ * @param {object} context
+ * @returns {Promise<boolean>} Function result
+ */
 const deleteMessage = async (context) => {
   try {
     const messageDate =
@@ -19,7 +29,7 @@ const deleteMessage = async (context) => {
 
     await retry(async () => {
       await context.deleteMessage();
-    }, options);
+    }, Options);
 
     return true;
   } catch (error) {

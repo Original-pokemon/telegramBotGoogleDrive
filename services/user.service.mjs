@@ -3,7 +3,7 @@ import { InlineKeyboard } from 'grammy';
 import _ from 'lodash';
 
 import { deleteMessage } from '../utils.mjs';
-import { END_MSG_TEXT, options } from '../variables.mjs';
+import { END_MSG_TEXT, Options } from '../variables.mjs';
 
 const sendEndMessage = async (context) => {
   const markup = {
@@ -19,7 +19,7 @@ const sendEndMessage = async (context) => {
 
     await retry(async () => {
       await context.reply(END_MSG_TEXT, markup);
-    }, options);
+    }, Options);
     console.log(`${context.session.user.Name} :>> Send end message`);
   } catch (error) {
     console.error(`Error sending end message: ${error.message}`);
@@ -37,7 +37,7 @@ const sendQestionMessage = async (context, questionNumber) => {
       await (question.Require
         ? context.reply(question.Text, markup)
         : context.reply(question.Text));
-    }, options);
+    }, Options);
     console.log(`${user.Name} :>> Send question: ${question.Name}`);
   } catch (error) {
     console.error(`Error in sendQestionMsg: ${error}`);
@@ -55,21 +55,20 @@ async function sendNextMessage(context, answersLength, questionsLength) {
 
 function userPanel(QuestionRepository) {
   return async (context) => {
-    const group = context.session.user.Group;
-    context.session.answers = [];
-    context.session.lastMessageDate = undefined;
-    context.session.debounceFunc = _.debounce(sendNextMessage, 500);
-
-    const questions = await QuestionRepository.getQuestions(group);
+    const { Group } = context.session.user;
+    const { session } = context;
+    session.answers = [];
+    session.lastMessageDate = undefined;
+    session.debounceFunc = _.debounce(sendNextMessage, 1000);
 
     try {
-      context.session.questions = questions;
-      context.session.scene = 'sending_photo';
+      session.questions = await QuestionRepository.getQuestions(Group);
+      session.scene = 'sending_photo';
       // check required parameters and send message
       await deleteMessage(context);
       await sendQestionMessage(context, 0);
     } catch (error) {
-      if (questions.length <= 0) {
+      if (session.questions.length <= 0) {
         console.log('В базе нету вопросов');
         sendEndMessage(context);
       } else {
@@ -90,13 +89,13 @@ async function handleAnswerTimeExceeded(context) {
       await context.reply(
         'Вы не уложились в 5 минут.\nПройдите проверку заново'
       );
-    }, options);
+    }, Options);
 
     context.session.lastMessageDate = undefined;
     // Send first question again
     await retry(async () => {
       await sendQestionMessage(context, 0);
-    }, options);
+    }, Options);
     console.log(`${context.session.user.Name} :>> Answer time exceeded`);
   } catch (error) {
     // Handle error by retrying the function
@@ -136,7 +135,7 @@ async function handlePhotoMessage(context) {
       const respone = await context.getFile();
 
       return respone;
-    }, options);
+    }, Options);
 
     const urlFile = file.getUrl();
 
@@ -277,7 +276,7 @@ async function sendPhotosToDrive(GoogleRepository, photos, folderId) {
       });
 
       promises.push(promise);
-    }, options);
+    }, Options);
 
     await Promise.allSettled(promises);
 
@@ -295,7 +294,7 @@ function saveToGoogle(GoogleRepository) {
     const year = date.getFullYear();
 
     try {
-      if (answers.length === 0) await deleteMessage(context);
+      if (answers?.length === 0) await deleteMessage(context);
 
       const folderId = await GoogleRepository.makeFolder({
         folderName: `${day}-${month}-${year}`,
@@ -304,13 +303,13 @@ function saveToGoogle(GoogleRepository) {
 
       await retry(async () => {
         await context.editMessageText('Фотографии отправляются ☑');
-      }, options);
+      }, Options);
 
       await sendPhotosToDrive(GoogleRepository, _.compact(answers), folderId);
 
       await retry(async () => {
         await context.editMessageText('Все фотографии отправленны ✅');
-      }, options);
+      }, Options);
 
       context.session.scene = '';
 

@@ -1,4 +1,4 @@
-export function userRoute(
+export default function userRoute(
   botInstance,
   router,
   userPanel,
@@ -8,12 +8,12 @@ export function userRoute(
   editPhoto,
   saveToGoogle
 ) {
-  botInstance.callbackQuery('startCheck', userPanel)
-  botInstance.callbackQuery('showPhotos', showPhotos)
-  botInstance.callbackQuery(/editPhoto_\d+/, editPhotoPanel)
-  botInstance.callbackQuery('sendPhotos', saveToGoogle)
-  botInstance.callbackQuery('skip_photo', getPhoto)
+  botInstance.callbackQuery('startCheck', userPanel);
+  botInstance.callbackQuery('showPhotos', showPhotos);
+  botInstance.callbackQuery(/editPhoto_\d+/, editPhotoPanel);
+  botInstance.callbackQuery('sendPhotos', saveToGoogle);
+  botInstance.callbackQuery('skip_photo', getPhoto);
 
-  router.route('sending_photo', getPhoto)
-  router.route('edit_photo', editPhoto)
+  router.route('sending_photo', getPhoto);
+  router.route('edit_photo', editPhoto);
 }

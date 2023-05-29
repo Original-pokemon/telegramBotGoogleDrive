@@ -1,65 +1,43 @@
-import { sendQuery } from '../postgres-node/sendQuery.mjs'
+export default class QuestionRepository {
+  constructor(sendQuery) {
+    this.sendQuery = sendQuery;
+  }
 
-export class QuestionRepository {
   async getQuestion(Id) {
-    const query = `SELECT * FROM "googleTelegram_bot"."Question" WHERE "Id" = '${Id}'`
-    try {
-      const res = await sendQuery(query)
-      return res.rows[0]
-    } catch (err) {
-      throw err
-    }
+    const query = `SELECT * FROM "googleTelegram_bot"."Question" WHERE "Id" = '${Id}'`;
+    const result = await this.sendQuery(query);
+    return result.rows[0];
   }
 
   async getQuestions(azs) {
-    const query =
-      `SELECT * FROM "googleTelegram_bot"."Question"  WHERE "Group" = '${azs}' OR "Group" = 'all';`
-    try {
-      const res = await sendQuery(query)
-      return res.rows
-    } catch (err) {
-      throw err
-    }
+    const query = `SELECT * FROM "googleTelegram_bot"."Question"  WHERE "Group" = '${azs}' OR "Group" = 'all';`;
+    const result = await this.sendQuery(query);
+    return result.rows;
   }
+
   async getAllQuestions() {
-    const QUERY = `SELECT * FROM "googleTelegram_bot"."Question"`
-    try {
-      const res = await sendQuery(QUERY)
-      return res.rows
-    } catch (err) {
-      throw err
-    }
+    const QUERY = `SELECT * FROM "googleTelegram_bot"."Question"`;
+    const result = await this.sendQuery(QUERY);
+    return result.rows;
   }
 
   async deleteQuestion(id) {
     const query = `DELETE FROM "googleTelegram_bot"."Question"
-	WHERE "Id" = '${id}';`
-    try {
-      const res = await sendQuery(query)
-      console.log('Successful remove:', res.rowCount)
-    } catch (err) {
-      throw err
-    }
+	WHERE "Id" = '${id}';`;
+    const result = await this.sendQuery(query);
+    console.log('Successful remove:', result.rowCount);
   }
 
   async addQuestion(name, text, Group, request) {
-    const query = `INSERT INTO "googleTelegram_bot"."Question" ("Name", "Text", "Group", "Require") VALUES ('${name}', '${text}', '${Group}', ${request});`
-    try {
-      const res = await sendQuery(query)
-      console.log('Successful add:', res.rowCount)
-    } catch (err) {
-      throw err
-    }
+    const query = `INSERT INTO "googleTelegram_bot"."Question" ("Name", "Text", "Group", "Require") VALUES ('${name}', '${text}', '${Group}', ${request});`;
+    const result = await this.sendQuery(query);
+    console.log('Successful add:', result.rowCount);
   }
 
   async updateQuestion(id, name, text, group) {
     const query = `UPDATE "googleTelegram_bot"."Question"
 	SET "Name" = '${name}', "Group" = '${group}', "Text" = '${text}'
-	WHERE "Id" = '${id}';`
-    try {
-      await sendQuery(query)
-    } catch (err) {
-      throw err
-    }
+	WHERE "Id" = '${id}';`;
+    await this.sendQuery(query);
   }
 }

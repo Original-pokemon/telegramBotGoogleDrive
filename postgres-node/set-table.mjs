@@ -1,4 +1,6 @@
-export const Models = {
+import getClient from './get-client.mjs';
+
+const Models = {
   Group: `CREATE TABLE IF NOT EXISTS "googleTelegram_bot"."Group"
   (
       "Name" text COLLATE pg_catalog."default" NOT NULL,
@@ -37,4 +39,15 @@ export const Models = {
       "Require" boolean NOT NULL DEFAULT false,
       CONSTRAINT "Question_pkey" PRIMARY KEY ("Id")
   );`,
+};
+
+const tableQuery =
+  Models.Group + Models.User + Models.Question + Models.PhotoFolder;
+
+export default async function createTable() {
+  const client = await getClient();
+  const result = await client.query(tableQuery);
+  await client.end();
+  if (result[0].rowCount) console.log('Created table');
+  return result;
 }

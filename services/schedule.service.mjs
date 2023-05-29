@@ -1,57 +1,65 @@
-import { InlineKeyboard } from 'grammy'
 import retry from 'async-retry';
-import { options, REMINDER_MSG_TEXT } from '../variables.mjs'
-import { deleteMessage } from '../utils.mjs'
+import { InlineKeyboard } from 'grammy';
 
-const HOUR_WAIT = 1
+import { deleteMessage } from '../utils.mjs';
+import { Options, REMINDER_MSG_TEXT } from '../variables.mjs';
+
+const HOUR_WAIT = 1;
 
 const markup = {
   reply_markup: new InlineKeyboard()
     .text('Да', 'startCheck')
     .row()
     .text('Нет', 'postponeСheck'),
-}
-
+};
 
 const sendRemindersToAll = async (botInstance, UsersRepository) => {
   try {
-    const users = await UsersRepository.getAllAzs()
+    const users = await UsersRepository.getAllAzs();
     const promises = users.map(async (e) => {
-      const id = e.Id
+      const id = e.Id;
       try {
-        await botInstance.api.sendMessage(id, REMINDER_MSG_TEXT, markup)
-        await new Promise(resolve => setTimeout(resolve, 500))
-      } catch (err) {
-        console.error('Error sending message to user:', id, err)
-        await retry(async () => await botInstance.api.sendMessage(id, REMINDER_MSG_TEXT, markup), options)
+        await botInstance.api.sendMessage(id, REMINDER_MSG_TEXT, markup);
+        await new Promise((resolve) => {
+          setTimeout(resolve, 500);
+        });
+      } catch (error) {
+        console.error('Error sending message to user:', id, error);
+        await retry(async () => {
+          await botInstance.api.sendMessage(id, REMINDER_MSG_TEXT, markup);
+        }, Options);
       }
-    })
-    await Promise.all(promises)
-  } catch (err) {
-    console.error('Error sending reminders to all users:', err)
+    });
+    await Promise.all(promises);
+  } catch (error) {
+    console.error('Error sending reminders to all users:', error);
   }
-}
+};
 
-const sendReminderToOne = async (ctx) => {
+const sendReminderToOne = async (context) => {
   try {
-    deleteMessage(ctx)
-    await new Promise(resolve => setTimeout(resolve, 1000 * 60 * 60 * HOUR_WAIT))
-    await retry(async () => await ctx.reply(REMINDER_MSG_TEXT, markup), options)
-  } catch (err) {
-    console.error('Error sending reminder to user:', err)
+    deleteMessage(context);
+    await new Promise((resolve) => {
+      setTimeout(resolve, 1000 * 60 * 60 * HOUR_WAIT);
+    });
+    await retry(async () => {
+      await context.reply(REMINDER_MSG_TEXT, markup);
+    }, Options);
+  } catch (error) {
+    console.error('Error sending reminder to user:', error);
   }
-}
+};
 
-export const sendReminderMessage = (botInstance, UsersRepository) => {
-  return async (ctx) => {
+export default function sendReminderMessage(botInstance, UsersRepository) {
+  return async (context) => {
     try {
-      if (ctx) {
-        sendReminderToOne(ctx)
+      if (context) {
+        sendReminderToOne(context);
       } else {
-        sendRemindersToAll(botInstance, UsersRepository)
+        sendRemindersToAll(botInstance, UsersRepository);
       }
-    } catch (err) {
-      console.error('schedule.service > sendReminderMessage ' + err)
+    } catch (error) {
+      console.error(`schedule.service > sendReminderMessage ${error}`);
     }
-  }
+  };
 }
