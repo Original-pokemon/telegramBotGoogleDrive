@@ -4,14 +4,14 @@ export default class UsersRepository {
   }
 
   async getUser(id) {
-    const query = `SELECT * FROM "googleTelegram_bot"."User" WHERE "Id" = '${id}'`;
+    const query = `SELECT * FROM "User" WHERE "Id" = '${id}'`;
 
     const result = await this.sendQuery(query);
     return result.rows[0];
   }
 
   async getAllUsers() {
-    const QUERY = `SELECT * FROM "googleTelegram_bot"."User";`;
+    const QUERY = `SELECT * FROM "User";`;
     try {
       const result = await this.sendQuery(QUERY);
       return result.rows;
@@ -23,7 +23,7 @@ export default class UsersRepository {
   }
 
   async getAllAzs() {
-    const QUERY = `SELECT * FROM "googleTelegram_bot"."User" WHERE "Group" != 'admin' AND "Group" != 'waitConfirm';`;
+    const QUERY = `SELECT * FROM "User" WHERE "Group" != 'admin' AND "Group" != 'waitConfirm';`;
     try {
       const result = await this.sendQuery(QUERY);
       return result.rows;
@@ -35,7 +35,7 @@ export default class UsersRepository {
   }
 
   async deleteUser(id) {
-    const query = `DELETE FROM "googleTelegram_bot"."User"
+    const query = `DELETE FROM "User"
 	WHERE "Id" = '${id}';`;
     try {
       const result = await this.sendQuery(query);
@@ -46,7 +46,7 @@ export default class UsersRepository {
   }
 
   async addUser(id, Name, Group) {
-    const creteQuery = `INSERT INTO "googleTelegram_bot"."User" ("Id", "Name", "Group") VALUES ('${id}', '${Name}', '${Group}');`;
+    const creteQuery = `INSERT INTO "User" ("Id", "Name", "Group") VALUES ('${id}', '${Name}', '${Group}');`;
     try {
       const createResponse = await this.sendQuery(creteQuery);
       const result = await this.getUser(id);
@@ -58,7 +58,7 @@ export default class UsersRepository {
   }
 
   async updateUser(id, Name, Group, FolderId) {
-    const query = `UPDATE "googleTelegram_bot"."User"
+    const query = `UPDATE "User"
 	SET "Name" = '${Name}', "Group" = '${Group}', "UserFolder" = '${FolderId}'
 	WHERE "Id" = '${id}';`;
 

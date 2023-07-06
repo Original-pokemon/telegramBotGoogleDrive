@@ -4,14 +4,14 @@ export default class GroupRepository {
   }
 
   async getAllGrups() {
-    const QUERY = 'SELECT * FROM "googleTelegram_bot"."Group";';
+    const QUERY = 'SELECT * FROM "Group";';
 
     const result = await this.sendQuery(QUERY);
     return result;
   }
 
   async deleteGroup(GroupName) {
-    const query = `DELETE FROM "googleTelegram_bot"."Group"
+    const query = `DELETE FROM "Group"
     WHERE "Name" = '${GroupName}';`;
 
     const result = await this.sendQuery(query);
@@ -19,7 +19,7 @@ export default class GroupRepository {
   }
 
   async addGroup(GroupName) {
-    const query = `INSERT INTO "googleTelegram_bot"."Group" VALUES ('${GroupName}') ON CONFLICT DO NOTHING;`;
+    const query = `INSERT INTO "Group" VALUES ('${GroupName}') ON CONFLICT DO NOTHING;`;
 
     const result = await this.sendQuery(query);
     if (result.rowCount) console.log('Created group:', GroupName);
@@ -27,7 +27,7 @@ export default class GroupRepository {
   }
 
   async updateGroup(oldName, newName) {
-    const query = `UPDATE "googleTelegram_bot"."Group"
+    const query = `UPDATE "Group"
     SET "Name"= '${newName}'
     WHERE "Name" = '${oldName}';`;
 

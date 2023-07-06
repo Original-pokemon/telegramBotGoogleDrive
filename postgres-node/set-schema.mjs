@@ -1,15 +1,12 @@
 import getClient from './get-client.mjs';
 
 const CREATE_SHEMA_QUERY = `
-CREATE SCHEMA IF NOT EXISTS "googleTelegram_bot"
+CREATE SCHEMA IF NOT EXISTS "${process.env.PG_USER}"
     AUTHORIZATION pg_database_owner;
 
-COMMENT ON SCHEMA "googleTelegram_bot"
-    IS 'standard public schema';
+GRANT USAGE ON SCHEMA "${process.env.PG_USER}" TO PUBLIC;
 
-GRANT USAGE ON SCHEMA "googleTelegram_bot" TO PUBLIC;
-
-GRANT ALL ON SCHEMA "googleTelegram_bot" TO pg_database_owner;
+GRANT ALL ON SCHEMA "${process.env.PG_USER}" TO pg_database_owner;
 `;
 
 export default async function createSchema() {
