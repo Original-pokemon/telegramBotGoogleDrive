@@ -4,7 +4,8 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "eslint": "eslint",
+    "start": "node index.js"
   },
   "keywords": [],
   "author": "",
@@ -22,7 +23,16 @@
     "limiter": "^2.1.0",
     "lodash": "^4.17.21",
     "node-schedule": "^2.1.1",
-    "pg": "^8.8.0"
+    "pg": "^8.11.0"
   },
-  "description": ""
+  "description": "",
+  "devDependencies": {
+    "eslint": "^8.39.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-config-prettier": "^8.8.0",
+    "eslint-plugin-lodash": "^7.4.0",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-prettier": "^4.2.1",
+    "eslint-plugin-unicorn": "^46.0.0"
+  }
 }
