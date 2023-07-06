@@ -4,6 +4,7 @@ import schedule from 'node-schedule';
 import { autoRetry } from '@grammyjs/auto-retry';
 import { hydrateFiles } from '@grammyjs/files';
 import { Router } from '@grammyjs/router';
+import { PsqlAdapter } from '@grammyjs/storage-psql';
 import { apiThrottler } from '@grammyjs/transformer-throttler';
 
 import adminRoute from './bot/admin.route.mjs';
@@ -54,6 +55,19 @@ import {
   userPanel,
 } from './services/user.service.mjs';
 
+function getSessionKey(context) {
+  return context.chat?.id.toString();
+}
+
+function createInitialSessionData() {
+  return {
+    scene: '',
+    isAdmin: false,
+    user: {},
+    isTopAdmin: false,
+  };
+}
+
 export default async function initBot(utilsGDrive) {
   const bot = new Bot(process.env.BOT_TOKEN);
 
@@ -71,13 +85,15 @@ export default async function initBot(utilsGDrive) {
   );
 
   const router = new Router((context) => context.session.scene);
+  const client = await getClient();
+
   bot.use(
     session({
-      initial: () => ({
-        scene: '',
-        isAdmin: false,
-        user: {},
-        isTopAdmin: false,
+      getSessionKey,
+      initial: createInitialSessionData,
+      storage: await PsqlAdapter.create({
+        tableName: 'session',
+        client,
       }),
     })
   );
