@@ -4,6 +4,7 @@ import schedule from 'node-schedule';
 import { autoRetry } from '@grammyjs/auto-retry';
 import { hydrateFiles } from '@grammyjs/files';
 import { Router } from '@grammyjs/router';
+import { run, sequentialize } from '@grammyjs/runner';
 import { PsqlAdapter } from '@grammyjs/storage-psql';
 import { apiThrottler } from '@grammyjs/transformer-throttler';
 
@@ -87,6 +88,8 @@ export default async function initBot(utilsGDrive) {
   const router = new Router((context) => context.session.scene);
   const client = await getClient();
 
+  bot.use(sequentialize(getSessionKey));
+
   bot.use(
     session({
       getSessionKey,
@@ -163,6 +166,15 @@ export default async function initBot(utilsGDrive) {
     }
   });
 
-  await bot.start();
-  console.log('Bot started');
+  const runner = run(bot);
+
+  console.log('Bot :>> Started');
+
+  const stopRunner = () => {
+    console.log('Bot :>> Stoping...');
+    return runner.isRunning() && runner.stop();
+  };
+
+  process.once('SIGINT', stopRunner);
+  process.once('SIGTERM', stopRunner);
 }
