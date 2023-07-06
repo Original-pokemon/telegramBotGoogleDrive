@@ -57,7 +57,6 @@ function userPanel(QuestionRepository) {
     const { session } = context;
     session.answers = [];
     session.lastMessageDate = undefined;
-    session.debounceFunc = _.debounce(sendNextMessage, 1000);
 
     try {
       session.questions = await QuestionRepository.getQuestions(Group);
@@ -107,7 +106,7 @@ async function handleCallbackQuery(context) {
 // Helper function to handle photo message
 
 async function handlePhotoMessage(context) {
-  const { answers, debounceFunc, questions } = context.session;
+  const { answers, questions } = context.session;
   if (answers.length === questions.length) return;
 
   if (checkAnswerTime(context)) {
@@ -117,7 +116,6 @@ async function handlePhotoMessage(context) {
   }
 
   const fileName = questions[answers.length].Name;
-  const sendNextMessageDebounced = debounceFunc;
   const messageDate = context.update.message.date;
 
   context.session.lastMessageDate = messageDate;
@@ -134,7 +132,7 @@ async function handlePhotoMessage(context) {
     });
 
     // Send next question or end message
-    sendNextMessageDebounced(context, answers.length, questions.length);
+    sendNextMessage(context, answers.length, questions.length);
   } catch (error) {
     console.error('user.service >> handlePhotoMessage:', error);
   }
