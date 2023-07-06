@@ -29,7 +29,7 @@ const deleteMessage = async (context) => {
 
     return true;
   } catch (error) {
-    if (error instanceof GrammyError && error.error_code === '400') {
+    if (error instanceof GrammyError && error.error_code === 400) {
       return true;
     }
 
