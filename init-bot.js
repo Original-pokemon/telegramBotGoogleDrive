@@ -1,6 +1,7 @@
 import { Bot, GrammyError, HttpError, session } from 'grammy';
 import schedule from 'node-schedule';
 
+import { autoRetry } from '@grammyjs/auto-retry';
 import { hydrateFiles } from '@grammyjs/files';
 import { Router } from '@grammyjs/router';
 
@@ -58,6 +59,13 @@ export default async function initBot(utilsGDrive) {
   const questionRepository = new QuestionRepository(sendQuery);
 
   bot.api.config.use(hydrateFiles(bot.token));
+  bot.api.config.use(
+    autoRetry({
+      maxRetryAttempts: 5, // only repeat requests once
+      maxDelaySeconds: 5, // fail immediately if we have to wait >5 seconds
+      retryOnInternalServerErrors: true,
+    })
+  );
 
   const router = new Router((context) => context.session.scene);
   bot.use(

@@ -2,7 +2,7 @@ import retry from 'async-retry';
 import { InlineKeyboard, Keyboard } from 'grammy';
 import _ from 'lodash';
 
-import { Options, REMINDER_MSG_TEXT } from '../variables.mjs';
+import { REMINDER_MSG_TEXT } from '../variables.mjs';
 
 function adminPanel() {
   return async (context) => {
@@ -46,18 +46,7 @@ function sendNewsletterForAll(UsersRepository, botInstance) {
 
       const promises = users.map(async (user) => {
         const id = user.Id;
-        try {
-          await botInstance.api.sendMessage(id, messageText);
-          await new Promise((resolve) => {
-            setTimeout(resolve, 500);
-          });
-        } catch {
-          console.error('Error sending message to user:', id);
-          await retry(async () => {
-            await botInstance.api.sendMessage(id, messageText);
-            return true;
-          }, Options);
-        }
+        await botInstance.api.sendMessage(id, messageText);
       });
 
       await Promise.all(promises);
@@ -313,12 +302,8 @@ function sendReminderMessageForUser(botInstance) {
     };
 
     try {
-      await retry(
-        async () =>
-          await botInstance.api.sendMessage(id, REMINDER_MSG_TEXT, markup),
-        Options
-      );
-      context.editMessageText('Уведомление отправленно!');
+      await botInstance.api.sendMessage(id, REMINDER_MSG_TEXT, markup);
+      await context.editMessageText('Уведомление отправленно!');
     } catch (error) {
       console.error('Error sending reminder to user:', error);
     }

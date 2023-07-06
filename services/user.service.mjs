@@ -17,9 +17,8 @@ const sendEndMessage = async (context) => {
     delete context.session.lastMessageDate;
     context.session.scene = 'end_msg';
 
-    await retry(async () => {
-      await context.reply(END_MSG_TEXT, markup);
-    }, Options);
+    await context.reply(END_MSG_TEXT, markup);
+
     console.log(`${context.session.user.Name} :>> Send end message`);
   } catch (error) {
     console.error(`Error sending end message: ${error.message}`);
@@ -33,11 +32,10 @@ const sendQestionMessage = async (context, questionNumber) => {
     reply_markup: new InlineKeyboard().text('Отсутсвует', 'skip_photo'),
   };
   try {
-    await retry(async () => {
-      await (question.Require
-        ? context.reply(question.Text, markup)
-        : context.reply(question.Text));
-    }, Options);
+    await (question.Require
+      ? context.reply(question.Text, markup)
+      : context.reply(question.Text));
+
     console.log(`${user.Name} :>> Send question: ${question.Name}`);
   } catch (error) {
     console.error(`Error in sendQestionMsg: ${error}`);
@@ -85,18 +83,12 @@ const checkAnswerTime = ({ session, update }) =>
 async function handleAnswerTimeExceeded(context) {
   try {
     // Notify user and reset session data
-    await retry(async () => {
-      await context.reply(
-        'Вы не уложились в 5 минут.\nПройдите проверку заново'
-      );
-    }, Options);
+    if (message) {
+      await context.reply(message);
+    }
 
-    context.session.lastMessageDate = undefined;
-    // Send first question again
-    await retry(async () => {
-      await sendQestionMessage(context, 0);
-    }, Options);
-    console.log(`${context.session.user.Name} :>> Answer time exceeded`);
+    await sendQestionMessage(context, 0);
+    console.log(`${context.session.user.Name} :>> Restart check`);
   } catch (error) {
     // Handle error by retrying the function
     console.error(`Error in handleAnswerTimeExceeded: ${error}`);
@@ -131,11 +123,7 @@ async function handlePhotoMessage(context) {
   context.session.lastMessageDate = messageDate;
   // Get file with retry on HttpError
   try {
-    const file = await retry(async () => {
-      const respone = await context.getFile();
-
-      return respone;
-    }, Options);
+    const file = await context.getFile();
 
     const urlFile = file.getUrl();
 
@@ -301,15 +289,10 @@ function saveToGoogle(GoogleRepository) {
         parentIdentifiers: userFolder,
       });
 
-      await retry(async () => {
-        await context.editMessageText('Фотографии отправляются ☑');
-      }, Options);
+      await context.editMessageText('Фотографии отправляются ☑');
 
       await sendPhotosToDrive(GoogleRepository, _.compact(answers), folderId);
-
-      await retry(async () => {
-        await context.editMessageText('Все фотографии отправленны ✅');
-      }, Options);
+      await context.editMessageText('Все фотографии отправленны ✅');
 
       context.session.scene = '';
 

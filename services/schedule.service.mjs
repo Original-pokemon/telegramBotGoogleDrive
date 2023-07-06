@@ -1,8 +1,7 @@
-import retry from 'async-retry';
 import { InlineKeyboard } from 'grammy';
 
 import { deleteMessage } from '../utils.mjs';
-import { Options, REMINDER_MSG_TEXT } from '../variables.mjs';
+import { REMINDER_MSG_TEXT } from '../variables.mjs';
 
 const HOUR_WAIT = 1;
 
@@ -16,18 +15,12 @@ const markup = {
 const sendRemindersToAll = async (botInstance, UsersRepository) => {
   try {
     const users = await UsersRepository.getAllAzs();
-    const promises = users.map(async (e) => {
-      const id = e.Id;
+    const promises = users.map(async (user) => {
+      const id = user.Id;
       try {
         await botInstance.api.sendMessage(id, REMINDER_MSG_TEXT, markup);
-        await new Promise((resolve) => {
-          setTimeout(resolve, 500);
-        });
       } catch (error) {
         console.error('Error sending message to user:', id, error);
-        await retry(async () => {
-          await botInstance.api.sendMessage(id, REMINDER_MSG_TEXT, markup);
-        }, Options);
       }
     });
     await Promise.all(promises);
@@ -42,9 +35,8 @@ const sendReminderToOne = async (context) => {
     await new Promise((resolve) => {
       setTimeout(resolve, 1000 * 60 * 60 * HOUR_WAIT);
     });
-    await retry(async () => {
-      await context.reply(REMINDER_MSG_TEXT, markup);
-    }, Options);
+
+    await context.reply(REMINDER_MSG_TEXT, markup);
   } catch (error) {
     console.error('Error sending reminder to user:', error);
   }

@@ -27,9 +27,7 @@ const deleteMessage = async (context) => {
       return true;
     }
 
-    await retry(async () => {
-      await context.deleteMessage();
-    }, Options);
+    await context.deleteMessage();
 
     return true;
   } catch (error) {
