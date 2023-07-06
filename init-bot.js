@@ -4,6 +4,7 @@ import schedule from 'node-schedule';
 import { autoRetry } from '@grammyjs/auto-retry';
 import { hydrateFiles } from '@grammyjs/files';
 import { Router } from '@grammyjs/router';
+import { apiThrottler } from '@grammyjs/transformer-throttler';
 
 import adminRoute from './bot/admin.route.mjs';
 import questionSettingRoute from './bot/question-setting.route.mjs';
@@ -59,6 +60,7 @@ export default async function initBot(utilsGDrive) {
   const userRepository = new UsersRepository(sendQuery);
   const questionRepository = new QuestionRepository(sendQuery);
 
+  bot.api.config.use(apiThrottler());
   bot.api.config.use(hydrateFiles(bot.token));
   bot.api.config.use(
     autoRetry({
