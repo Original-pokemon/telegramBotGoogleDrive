@@ -1,6 +1,6 @@
 import dotenv from 'dotenv';
 
-import { initGoogleDrive } from './google-drive/initGoogleDrive.mjs';
+import { initGoogleDrive } from './google-drive/init-google-drive.mjs';
 import initBot from './init-bot.js';
 import initBase from './postgres-node/init-base.mjs';
 import sendQuery from './postgres-node/send-query.mjs';
