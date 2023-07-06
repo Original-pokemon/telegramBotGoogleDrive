@@ -280,7 +280,7 @@ function saveToGoogle(GoogleRepository) {
     const year = date.getFullYear();
 
     try {
-      if (answers?.length === 0) await deleteMessage(context);
+      if (!answers?.length) await deleteMessage(context);
 
       const folderId = await GoogleRepository.makeFolder({
         folderName: `${day}-${month}-${year}`,
