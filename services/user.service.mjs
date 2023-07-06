@@ -79,7 +79,10 @@ function userPanel(QuestionRepository) {
 const checkAnswerTime = ({ session, update }) =>
   session.lastMessageDate <= update.message.date - 5 * 60;
 
-async function handleAnswerTimeExceeded(context) {
+async function handleRestartCheck(context, message = '') {
+  context.session.answers = [];
+  context.session.lastMessageDate = undefined;
+
   try {
     // Notify user and reset session data
     if (message) {
@@ -104,14 +107,15 @@ async function handleCallbackQuery(context) {
 }
 
 // Helper function to handle photo message
-
 async function handlePhotoMessage(context) {
   const { answers, questions } = context.session;
   if (answers.length === questions.length) return;
 
   if (checkAnswerTime(context)) {
-    handleAnswerTimeExceeded(context);
-    context.session.answers = [];
+    await handleRestartCheck(
+      context,
+      'Вы не уложились в 5 минут.\nПройдите проверку заново'
+    );
     return;
   }
 
@@ -141,18 +145,14 @@ async function handlePhotoMessage(context) {
 function getPhotoAnswer() {
   return async (context) => {
     const { message, callback_query: callbackQuery } = context.update;
+
     if (!message?.photo && !callbackQuery?.data) return;
 
     try {
       // Check if user interrupted previous check
       if (!message?.photo && callbackQuery?.data !== 'skip_photo') {
-        context.session.scene = '';
-        await context.reply(
-          'Вы прервали прошлую проверку😔\n\nНажмите кнопку "Да" ещё раз🙏'
-        );
-        console.log(
-          `${context.session.user.Name} :>> Send Alert about interrupted previous check`
-        );
+        await deleteMessage(context);
+        await handleRestartCheck(context);
         return;
       }
 
