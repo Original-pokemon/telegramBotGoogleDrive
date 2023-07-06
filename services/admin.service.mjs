@@ -1,4 +1,3 @@
-import retry from 'async-retry';
 import { InlineKeyboard, Keyboard } from 'grammy';
 import _ from 'lodash';
 
@@ -156,7 +155,7 @@ function userPromote(usersRepository) {
       const id = context.update.callback_query?.data.split('_')[1];
       const user = await usersRepository.getUser(id);
 
-      if (!context.session.isAdmin && !context.session.isTopAdmin)
+      if (!context.session.isAdmin || !context.session.isTopAdmin)
         return await context.editMessageText('Вы не администратор!');
 
       if (user.Group === 'admin') {
