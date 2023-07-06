@@ -12,6 +12,7 @@ import startRoute from './bot/start.route.mjs';
 import userRoute from './bot/user.route.mjs';
 import authMiddleware from './middleware/auth.mw.mjs';
 import responseTimeMiddleware from './middleware/response-time.mw.mjs';
+import getClient from './postgres-node/get-client.mjs';
 import sendQuery from './postgres-node/send-query.mjs';
 import QuestionRepository from './repositories/question.repository.mjs';
 import UsersRepository from './repositories/user.repository.mjs';
@@ -42,7 +43,7 @@ import {
   updateQuestionData,
 } from './services/questionSetting.service.mjs';
 import sendReminderMessage from './services/schedule.service.mjs';
-import { start } from './services/start.service.mjs';
+import start from './services/start.service.mjs';
 import {
   editPhoto,
   editPhotoPanel,
