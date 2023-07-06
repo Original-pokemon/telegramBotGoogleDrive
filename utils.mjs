@@ -1,7 +1,5 @@
-import retry from 'async-retry';
 import dayjs from 'dayjs';
-
-import { Options } from './variables.mjs';
+import { GrammyError } from 'grammy';
 
 /**
  *
@@ -31,6 +29,10 @@ const deleteMessage = async (context) => {
 
     return true;
   } catch (error) {
+    if (error instanceof GrammyError && error.error_code === '400') {
+      return true;
+    }
+
     console.error(`Error in delete func: ${error}`);
     return false;
   }
