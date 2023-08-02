@@ -79,7 +79,10 @@ function userPanel(QuestionRepository) {
 const checkAnswerTime = ({ session, update }) =>
   session.lastMessageDate <= update.message.date - 5 * 60;
 
-async function handleRestartCheck(context, message = '') {
+async function handleRestartCheck(context, QuestionRepository, message = '') {
+  const { Group, Name } = context.session.user;
+
+  context.session.questions = await QuestionRepository.getQuestions(Group);
   context.session.answers = [];
   context.session.lastMessageDate = undefined;
 
@@ -90,7 +93,7 @@ async function handleRestartCheck(context, message = '') {
     }
 
     await sendQestionMessage(context, 0);
-    console.log(`${context.session.user.Name} :>> Restart check`);
+    console.log(`${Name} :>> Restart check`);
   } catch (error) {
     // Handle error by retrying the function
     console.error(`Error in handleAnswerTimeExceeded: ${error}`);
@@ -107,13 +110,14 @@ async function handleCallbackQuery(context) {
 }
 
 // Helper function to handle photo message
-async function handlePhotoMessage(context) {
+async function handlePhotoMessage(context, QuestionRepository) {
   const { answers, questions } = context.session;
   if (answers.length === questions.length) return;
 
   if (checkAnswerTime(context)) {
     await handleRestartCheck(
       context,
+      QuestionRepository,
       'Вы не уложились в 5 минут.\nПройдите проверку заново'
     );
     return;
@@ -142,7 +146,7 @@ async function handlePhotoMessage(context) {
   }
 }
 
-function getPhotoAnswer() {
+function getPhotoAnswer(QuestionRepository) {
   return async (context) => {
     const { message, callback_query: callbackQuery } = context.update;
 
@@ -152,7 +156,7 @@ function getPhotoAnswer() {
       // Check if user interrupted previous check
       if (!message?.photo && callbackQuery?.data !== 'skip_photo') {
         await deleteMessage(context);
-        await handleRestartCheck(context);
+        await handleRestartCheck(context, QuestionRepository);
         return;
       }
 
@@ -169,7 +173,7 @@ function getPhotoAnswer() {
       }
 
       // Handle photo message
-      await handlePhotoMessage(context);
+      await handlePhotoMessage(context, QuestionRepository);
     } catch (error) {
       console.error(`user.service > getPhotoAnswer ${error}`);
     }

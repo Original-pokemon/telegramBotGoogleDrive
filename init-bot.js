@@ -131,7 +131,7 @@ export default async function initBot(utilsGDrive) {
     bot,
     router,
     userPanel(questionRepository),
-    getPhotoAnswer(),
+    getPhotoAnswer(questionRepository),
     showPhotos(),
     editPhotoPanel(),
     editPhoto(),
