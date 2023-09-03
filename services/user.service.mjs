@@ -237,9 +237,13 @@ function editPhoto() {
     try {
       if (context.callbackQuery?.data === 'startCheck') {
         context.session.scene = '';
+        return;
       }
 
-      if (!context.update.message?.photo) return await deleteMessage(context);
+      if (!context.update.message?.photo) {
+        await deleteMessage(context);
+        return;
+      }
 
       const { answers } = context.session;
       const { answersIndex } = context.session;
