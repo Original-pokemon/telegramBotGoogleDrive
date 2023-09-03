@@ -1,7 +1,7 @@
 import { InlineKeyboard, Keyboard } from 'grammy';
 import _ from 'lodash';
 
-import { REMINDER_MSG_TEXT } from '../variables.mjs';
+import { REMINDER_MSG_TEXT } from '../const.mjs';
 
 function adminPanel() {
   return async (context) => {

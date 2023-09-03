@@ -1,4 +1,4 @@
-import { SHEDULE_TIME } from '../variables.mjs';
+import { SHEDULE_TIME } from '../const.mjs';
 
 export default function sheduleRoute(botInstance, schedule, sendReminder) {
   schedule.scheduleJob({ hour: 0, minute: 0 }, async () => {

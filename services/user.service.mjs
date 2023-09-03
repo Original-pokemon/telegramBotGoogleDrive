@@ -2,8 +2,8 @@ import retry from 'async-retry';
 import { InlineKeyboard } from 'grammy';
 import _ from 'lodash';
 
+import { END_MSG_TEXT, Options } from '../const.mjs';
 import { deleteMessage } from '../utils.mjs';
-import { END_MSG_TEXT, Options } from '../variables.mjs';
 
 const sendEndMessage = async (context) => {
   const markup = {
@@ -235,6 +235,10 @@ function editPhotoPanel() {
 function editPhoto() {
   return async (context) => {
     try {
+      if (context.callbackQuery?.data === 'startCheck') {
+        context.session.scene = '';
+      }
+
       if (!context.update.message?.photo) return await deleteMessage(context);
 
       const { answers } = context.session;
