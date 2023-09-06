@@ -5,14 +5,18 @@ export default function authMiddleware(bot, userRepository) {
       last_name: lastName,
       id: userId,
     } = context.chat;
-    const userName =
-      [...firstName].filter((item) => item !== ' ').join('') + lastName
-        ? `_${lastName}`
-        : '';
+
+    const firstPartUserName = [...firstName]
+      .filter((item) => item !== ' ')
+      .join('');
+    const secondPartUserName = lastName ? `_${lastName}` : '';
+    const userName = firstPartUserName + secondPartUserName;
+
     try {
       let user = await userRepository.getUser(userId);
 
       if (!user) {
+        // If the user in database
         const group =
           process.env.MAIN_ADMIN_ID === userId ? 'admin' : 'waitConfirm';
         user = await userRepository.addUser(userId, userName, group);
@@ -21,6 +25,7 @@ export default function authMiddleware(bot, userRepository) {
           `new User: ${JSON.stringify(user, undefined, '\t')}`
         );
       } else if (context.update?.my_chat_member) {
+        // If the user block bot
         await userRepository.deleteUser(userId);
       }
 
