@@ -51,7 +51,7 @@ export default class UsersRepository {
       const createResponse = await this.sendQuery(creteQuery);
       const result = await this.getUser(id);
       console.log('Successful add:', createResponse.rowCount);
-      return result.rows[0];
+      return result;
     } catch (error) {
       throw new Error(`Ошибка в добавлении пользователя: \n${error.message}`);
     }
