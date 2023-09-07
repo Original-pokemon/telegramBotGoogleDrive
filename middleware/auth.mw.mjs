@@ -1,4 +1,4 @@
-import { Group } from '../const.mjs';
+import { UserGroup } from '../const.mjs';
 
 export default function authMiddleware(bot, userRepository) {
   return async (context, next) => {
@@ -21,8 +21,8 @@ export default function authMiddleware(bot, userRepository) {
         // If the user in database
         const group =
           process.env.MAIN_ADMIN_ID === userId
-            ? Group.Admin
-            : Group.WaitConfirm;
+            ? UserGroup.Admin
+            : UserGroup.WaitConfirm;
         user = await userRepository.addUser(userId, userName, group);
         bot.api.sendMessage(
           process.env.MAIN_ADMIN_ID,
@@ -37,7 +37,7 @@ export default function authMiddleware(bot, userRepository) {
 
       if (process.env.MAIN_ADMIN_ID === userId) {
         context.session.isTopAdmin = true;
-      } else if (user.Group === Group.Admin) context.session.isAdmin = true;
+      } else if (user.Group === UserGroup.Admin) context.session.isAdmin = true;
       else context.session.isAdmin = false;
       await next();
     } catch (error) {

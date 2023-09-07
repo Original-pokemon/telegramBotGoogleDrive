@@ -1,6 +1,6 @@
 import { InlineKeyboard } from 'grammy';
 
-import { Group } from '../const.mjs';
+import { UserGroup } from '../const.mjs';
 
 export default function start() {
   return async (context) => {
@@ -8,7 +8,7 @@ export default function start() {
       let buttons = new InlineKeyboard();
       if (context.session.isAdmin || context.session.isTopAdmin) {
         buttons = buttons
-          .text('Открыть панель администратора', Group.Admin)
+          .text('Открыть панель администратора', UserGroup.Admin)
           .row();
       }
       context.reply(

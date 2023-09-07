@@ -1,4 +1,4 @@
-import { Group } from '../const.mjs';
+import { UserGroup } from '../const.mjs';
 
 export default class UsersRepository {
   constructor(sendQuery) {
@@ -25,7 +25,7 @@ export default class UsersRepository {
   }
 
   async getAllAzs() {
-    const QUERY = `SELECT * FROM "User" WHERE "Group" != '${Group.Admin}' AND "Group" != '${Group.WaitConfirm}';`;
+    const QUERY = `SELECT * FROM "User" WHERE "Group" != '${UserGroup.Admin}' AND "Group" != '${UserGroup.WaitConfirm}';`;
     try {
       const result = await this.sendQuery(QUERY);
       return result.rows;

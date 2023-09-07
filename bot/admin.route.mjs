@@ -1,4 +1,4 @@
-import { Group } from '../const.mjs';
+import { UserGroup } from '../const.mjs';
 
 export default function adminRoute(
   botInstance,
@@ -17,7 +17,7 @@ export default function adminRoute(
   newsletterPanel,
   sendLetterText
 ) {
-  botInstance.callbackQuery(Group.Admin, adminPanel);
+  botInstance.callbackQuery(UserGroup.Admin, adminPanel);
   botInstance.callbackQuery(/userId_\d+/, profile);
   botInstance.callbackQuery(/promote_\d+/, promote);
   botInstance.callbackQuery(/wait_\d+/, userGroup);
