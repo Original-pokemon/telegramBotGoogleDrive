@@ -3,6 +3,7 @@ import schedule from 'node-schedule';
 
 import { autoRetry } from '@grammyjs/auto-retry';
 import { hydrateFiles } from '@grammyjs/files';
+import { Menu } from '@grammyjs/menu';
 import { Router } from '@grammyjs/router';
 import { run, sequentialize } from '@grammyjs/runner';
 import { PsqlAdapter } from '@grammyjs/storage-psql';
@@ -17,6 +18,7 @@ import authMiddleware from './middleware/auth.mw.mjs';
 import responseTimeMiddleware from './middleware/response-time.mw.mjs';
 import getClient from './postgres-node/get-client.mjs';
 import sendQuery from './postgres-node/send-query.mjs';
+import GroupRepository from './repositories/group.repositoy.mjs';
 import QuestionRepository from './repositories/question.repository.mjs';
 import UsersRepository from './repositories/user.repository.mjs';
 import {
@@ -36,7 +38,6 @@ import {
 } from './services/admin.service.mjs';
 import {
   addQuestion,
-  checkAzsType,
   deleteQuestion,
   questionPanel,
   questionProfile,
@@ -44,7 +45,7 @@ import {
   sendEditMessagePanel,
   showQuestionList,
   updateQuestionData,
-} from './services/questionSetting.service.mjs';
+} from './services/question-setting.service.mjs';
 import sendReminderMessage from './services/schedule.service.mjs';
 import start from './services/start.service.mjs';
 import {
@@ -74,6 +75,7 @@ export default async function initBot(utilsGDrive) {
 
   const userRepository = new UsersRepository(sendQuery);
   const questionRepository = new QuestionRepository(sendQuery);
+  const groupRepository = new GroupRepository(sendQuery);
 
   bot.api.config.use(apiThrottler());
   bot.api.config.use(hydrateFiles(bot.token));
@@ -104,6 +106,9 @@ export default async function initBot(utilsGDrive) {
   bot.use(authMiddleware(bot, userRepository));
   bot.use(responseTimeMiddleware());
   bot.use(router);
+  const menu = new Menu('question-type-menu');
+
+  bot.use(menu);
 
   startRoute(bot, start());
 
@@ -144,11 +149,10 @@ export default async function initBot(utilsGDrive) {
     questionPanel(),
     showQuestionList(questionRepository),
     questionProfile(questionRepository),
-    addQuestion(questionRepository),
-    checkAzsType(),
+    addQuestion(menu, questionRepository, groupRepository),
     deleteQuestion(questionRepository),
     sendEditMessagePanel(),
-    redirectUpdateQuestion(),
+    redirectUpdateQuestion(menu, groupRepository),
     updateQuestionData(questionRepository)
   );
 

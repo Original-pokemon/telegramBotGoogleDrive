@@ -25,7 +25,7 @@ const sendEndMessage = async (context) => {
   }
 };
 
-const sendQestionMessage = async (context, questionNumber) => {
+const sendQuestionMessage = async (context, questionNumber) => {
   const { questions, user } = context.session;
   const question = questions[questionNumber];
   const markup = {
@@ -48,7 +48,7 @@ async function sendNextMessage(context, answersLength, questionsLength) {
 
   await (questionsLength === answersLength
     ? sendEndMessage(context)
-    : sendQestionMessage(context, answersLength));
+    : sendQuestionMessage(context, answersLength));
 }
 
 function userPanel(QuestionRepository) {
@@ -63,7 +63,7 @@ function userPanel(QuestionRepository) {
       session.scene = 'sending_photo';
       // check required parameters and send message
       await deleteMessage(context);
-      await sendQestionMessage(context, 0);
+      await sendQuestionMessage(context, 0);
     } catch (error) {
       if (session.questions.length <= 0) {
         console.log('В базе нету вопросов');
@@ -92,7 +92,7 @@ async function handleRestartCheck(context, QuestionRepository, message = '') {
       await context.reply(message);
     }
 
-    await sendQestionMessage(context, 0);
+    await sendQuestionMessage(context, 0);
     console.log(`${Name} :>> Restart check`);
   } catch (error) {
     // Handle error by retrying the function
@@ -254,11 +254,8 @@ function editPhoto() {
       photo.urlFile = file.getUrl();
 
       await sendEndMessage(context);
-
-      return true;
     } catch (error) {
       console.error(`user.service > editPhoto ${error}`);
-      return false;
     }
   };
 }

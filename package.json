@@ -14,6 +14,7 @@
     "@googleapis/drive": "^3.0.1",
     "@grammyjs/auto-retry": "^1.1.1",
     "@grammyjs/files": "^1.0.4",
+    "@grammyjs/menu": "^1.2.1",
     "@grammyjs/router": "^2.0.0",
     "@grammyjs/runner": "2.0.3",
     "@grammyjs/storage-psql": "^2.3.0",

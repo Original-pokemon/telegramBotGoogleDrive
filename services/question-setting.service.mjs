@@ -1,4 +1,7 @@
 import { InlineKeyboard } from 'grammy';
+import _ from 'lodash';
+
+import { UserGroup } from '../const.mjs';
 
 function questionPanel() {
   return async (context) => {
@@ -19,9 +22,12 @@ function showQuestionList(QuestionRepository) {
   return async (context) => {
     const questions = await QuestionRepository.getAllQuestions();
     const markup = new InlineKeyboard();
-    for (const item of questions) {
-      markup.text(item.Name, `questionId_${item.Id}`).row();
-    }
+    _.each(questions, (question) => {
+      if (question.Name) {
+        markup.text(question.Name, `questionId_${question.Id}`).row();
+      }
+    });
+
     context.editMessageText('Все вопросы', { reply_markup: markup });
   };
 }
@@ -30,29 +36,14 @@ function questionProfile(QuestionRepository) {
   return async (context) => {
     const id = context.update.callback_query.data.split('_')[1];
     const question = await QuestionRepository.getQuestion(id);
-    let questionGroup;
-
-    switch (question.Group) {
-      case 'azs': {
-        questionGroup = 'Для киосков';
-        break;
-      }
-      case 'azsWithStore': {
-        questionGroup = 'Для АЗС с магазином';
-        break;
-      }
-      case 'all': {
-        questionGroup = 'Для всех АЗС';
-        break;
-      }
-    }
+    const { Name, Text, Require, Group } = question;
 
     await context.editMessageText(
-      `Вопрос №${id}\n` +
-      `Название вопроса: ${question.Name}\n` +
-      `Текст вопроса: ${question.Text}\n` +
-      `Для каких АЗС: ${questionGroup}\n` +
-      `Кнопка "Отсутсвует": ${question.Require === true ? 'Есть' : 'Нету'}`,
+      `Вопрос №${id}\n
+Название вопроса: ${Name}\n
+Текст вопроса: ${Text}\n
+Для каких АЗС: ${Group}\n
+Кнопка "Отсутсвует": ${Require === true ? 'Есть' : 'Нету'}`,
       {
         reply_markup: new InlineKeyboard()
           .text('Изменить', ` edit_question_${id}`)
@@ -60,16 +51,27 @@ function questionProfile(QuestionRepository) {
           .text('Удалить', `del_question_${id}`),
       }
     );
+
     context.session.question = question;
   };
 }
 
 // Define a function to handle text processing
-function addQuestion(QuestionRepository) {
+function addQuestion(menu, QuestionRepository, GroupRepository) {
+  const question = {
+    name: '',
+    groups: new Set(),
+    text: '',
+  };
+
+  const toggleSelectGroup = (Name) => {
+    if (!question.groups.delete(Name)) question.groups.add(Name);
+  };
+
   return async (context) => {
     switch (context.session.scene) {
       case 'name': {
-        context.session.name = context.message.text;
+        question.name = context.message.text;
 
         context.session.scene = 'text';
 
@@ -80,8 +82,7 @@ function addQuestion(QuestionRepository) {
       }
 
       case 'text': {
-        context.session.text = context.message.text;
-
+        question.text = context.message.text;
         context.session.scene = 'require';
 
         const Options = [
@@ -96,7 +97,7 @@ function addQuestion(QuestionRepository) {
           ]),
         };
 
-        await context.reply('Добавить кнопку "Отсутсвует"?', {
+        await context.reply('Вопрос обязательный?', {
           reply_markup: markup,
         });
 
@@ -104,82 +105,58 @@ function addQuestion(QuestionRepository) {
       }
 
       case 'require': {
-        const questionName = context.session.name;
-        const questionGroup = context.session.azs;
-        const questionText = context.session.text;
+        const { name, groups, text } = question;
         const questionRequired =
           context.update.callback_query.data.split('_')[1];
 
         await QuestionRepository.addQuestion(
-          questionName,
-          questionText,
-          questionGroup,
+          name,
+          text,
+          [...groups].join(','),
           questionRequired
         );
 
         await context.editMessageText('Вопрос успешно добавлен в базу данных!');
 
         context.session.scene = '';
-        delete context.session.group;
-        delete context.session.name;
-        delete context.session.text;
 
         break;
       }
 
       default: {
         // Create the keyboard with two buttons
-        const keyboard = {
-          reply_markup: new InlineKeyboard()
-            .text('Для АЗС с магазином', 'azs_with_shop')
-            .row()
-            .text('Для АЗС без магазина', 'azs_without_shop')
-            .row()
-            .text('Для всех АЗС', 'azs_all'),
-        };
+        const groups = await GroupRepository.getAllGroups();
+        _.each(groups, ({ Name }) => {
+          if (Name !== UserGroup.Admin && Name !== UserGroup.WaitConfirm) {
+            menu
+              .text(
+                () => (question.groups.has(Name) ? `${Name}✅` : `${Name}⛔`),
+                (context_) => {
+                  toggleSelectGroup(Name);
+                  context_.menu.update();
+                }
+              )
+              .row();
+          }
+        });
+
+        menu.text('Сохранить', async () => {
+          context.session.scene = 'name';
+          await context.editMessageText(
+            'Введите название вопроса:\n\nНазвание должно отражать то, что будет на фото\n\nК примеру - Витрина '
+          );
+        });
 
         // Ask the user for the group name and provide the keyboard
-        await context.editMessageText('Выбирете азс:', keyboard);
+        await context.editMessageText(
+          'Выберите типы АЗС, которые будут получать уведомление:',
+          {
+            reply_markup: menu,
+          }
+        );
+
         break;
       }
-    }
-  };
-}
-
-// Listen for button presses and call the handleText function
-function checkAzsType() {
-  return async (context) => {
-    try {
-      // Get the button data from the callback query
-      const buttonData = context.callbackQuery.data;
-
-      // Handle the button press based on the data
-      switch (buttonData) {
-        case 'azs_with_shop': {
-          // Set the user session to 'azs_with_shop'
-          context.session.azs = Group.AzsWithStore;
-          break;
-        }
-
-        case 'azs_without_shop': {
-          // Set the user session to 'azs_without_shop'
-          context.session.azs = Group.Azs;
-          break;
-        }
-
-        default: {
-          context.session.azs = 'all';
-          break;
-        }
-      }
-
-      context.session.scene = 'name';
-      await context.editMessageText(
-        'Введите название вопроса:\n\nНазвание должно отражать то, что будет на фото\n\nК примеру - Витрина '
-      );
-    } catch (error) {
-      console.error('Ошибка в функции checkAzsType:', error);
-      // Handle the error here
     }
   };
 }
@@ -221,14 +198,18 @@ function sendEditMessagePanel() {
       });
     } catch (error) {
       console.error('Ошибка в функции sendEditMessagePanel:', error);
-      // Можно отправить сообщение пользователю о том, что произошла ошибка
       await context.reply('Произошла ошибка при обработке команды');
     }
   };
 }
 
-function redirectUpdateQuestion() {
+function redirectUpdateQuestion(menu, GroupRepository) {
   return async (context) => {
+    const toggleSelectGroup = (Name) => {
+      if (!context.session.question.Group.delete(Name))
+        context.session.question.Group.add(Name);
+    };
+
     try {
       const buttonData = context.callbackQuery.data.split('_')[1];
       switch (buttonData) {
@@ -243,16 +224,46 @@ function redirectUpdateQuestion() {
           break;
         }
         case 'group': {
-          context.session.scene = 'updateQuestion_group';
-          const keyboard = {
-            reply_markup: new InlineKeyboard()
-              .text('Для АЗС с магазином', 'azs_with_shop')
-              .row()
-              .text('Для АЗС без магазина', 'azs_without_shop')
-              .row()
-              .text('Для всех АЗС', 'azs_all'),
-          };
-          await context.editMessageText('Выбирете азс:', keyboard);
+          const groups = await GroupRepository.getAllGroups();
+          context.session.question.Group = new Set(
+            context.session.question.Group
+          );
+          _.each(groups, ({ Name }) => {
+            if (Name !== UserGroup.Admin && Name !== UserGroup.WaitConfirm) {
+              menu
+                .text(
+                  () =>
+                    context.session.question.Group.has(Name)
+                      ? `${Name}✅`
+                      : `${Name}⛔`,
+                  (context_) => {
+                    toggleSelectGroup(Name);
+                    context_.menu.update();
+                  }
+                )
+                .row();
+            }
+          });
+
+          menu.text(
+            () =>
+              context.session.scene === 'updateQuestion_group'
+                ? 'Сохранить'
+                : 'Подтвердить',
+            async (context_) => {
+              context.session.scene = 'updateQuestion_group';
+              context_.menu.update();
+            }
+          );
+
+          // Ask the user for the group name and provide the keyboard
+          await context.editMessageText(
+            'Выберите типы АЗС, которые будут получать уведомление:',
+            {
+              reply_markup: menu,
+            }
+          );
+
           break;
         }
         default: {
@@ -283,11 +294,7 @@ function updateQuestionData(QuestionRepository) {
         break;
       }
       case 'group': {
-        const questionGroup =
-          context.callbackQuery.data === 'azs_with_shop'
-            ? Group.AzsWithStore
-            : Group.Azs;
-        question.Group = questionGroup;
+        console.log('question.Group :>>', question.Group);
         break;
       }
       default: {
@@ -299,11 +306,13 @@ function updateQuestionData(QuestionRepository) {
         question.Id,
         question.Name,
         question.Text,
-        question.Group
+        [...question.Group].join(','),
+        question.Require
       );
-      scene === 'group'
-        ? await context.editMessageText('Данные вопроса успешно обновлены')
-        : await context.reply('Данные вопроса успешно обновлены');
+      await (scene === 'group'
+        ? context.editMessageText('Данные вопроса успешно обновлены')
+        : context.reply('Данные вопроса успешно обновлены'));
+
       context.session.scene = '';
     } catch (error) {
       console.error(error);
@@ -314,7 +323,6 @@ function updateQuestionData(QuestionRepository) {
 
 export {
   addQuestion,
-  checkAzsType,
   deleteQuestion,
   questionPanel,
   questionProfile,

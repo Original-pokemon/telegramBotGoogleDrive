@@ -5,7 +5,6 @@ export default function questionSettingRoute(
   showQuestionList,
   questionProfile,
   addQuestion,
-  checkAzsType,
   deleteQuestion,
   sendEditMessagePanel,
   redirectUpdateQuestion,
@@ -14,7 +13,6 @@ export default function questionSettingRoute(
   botInstance.callbackQuery('show_all_questions', showQuestionList);
   botInstance.callbackQuery(/questionId_\d+/, questionProfile);
   botInstance.callbackQuery('add_question', addQuestion);
-  botInstance.callbackQuery(/azs_\w+/, checkAzsType);
   botInstance.callbackQuery(/del_question_\d+/, deleteQuestion);
   botInstance.callbackQuery(/edit_question_\d+/, sendEditMessagePanel);
   botInstance.callbackQuery(/update_\w+/, redirectUpdateQuestion);

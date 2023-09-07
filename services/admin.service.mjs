@@ -1,7 +1,7 @@
 import { InlineKeyboard, Keyboard } from 'grammy';
 import _ from 'lodash';
 
-import { Group, REMINDER_MSG_TEXT } from '../const.mjs';
+import { REMINDER_MSG_TEXT, UserGroup } from '../const.mjs';
 
 function adminPanel() {
   return async (context) => {
@@ -100,22 +100,25 @@ function userProfile(usersRepository) {
 
       markup
         .text(
-          user.Group === Group.Admin
+          user.Group === UserGroup.Admin
             ? 'Разжаловать'
             : 'Повысить до администратора',
           `promote_${user.Id}`
         )
         .row()
         .text(
-          user.Group === Group.WaitConfirm
+          user.Group === UserGroup.WaitConfirm
             ? 'Выдать доступ'
             : 'Ограничить доступ',
           `wait_${user.Id}`
         );
 
-      if (user.Group === Group.Azs || user.Group === Group.WaitConfirm) {
+      if (
+        user.Group === UserGroup.Azs ||
+        user.Group === UserGroup.WaitConfirm
+      ) {
         const groupText =
-          user.Group === Group.Azs
+          user.Group === UserGroup.Azs
             ? 'Изменить роль на АЗС с магазином'
             : 'Изменить роль на АЗС без магазина(киоск)';
 
@@ -162,12 +165,12 @@ function userPromote(usersRepository) {
       if (!context.session.isAdmin || !context.session.isTopAdmin)
         return await context.editMessageText('Вы не администратор!');
 
-      if (user.Group === Group.Admin) {
-        await usersRepository.updateUser(id, user.Name, Group.WaitConfirm);
+      if (user.Group === UserGroup.Admin) {
+        await usersRepository.updateUser(id, user.Name, UserGroup.WaitConfirm);
         return await context.editMessageText('Пользователь успешно понижен!');
       }
-      if (user.Group !== Group.Admin) {
-        await usersRepository.updateUser(id, user.Name, Group.Admin);
+      if (user.Group !== UserGroup.Admin) {
+        await usersRepository.updateUser(id, user.Name, UserGroup.Admin);
         return await context.editMessageText('Пользователь успешно повышен!');
       }
 
@@ -192,12 +195,12 @@ function userGroup(usersRepository) {
         return await context.editMessageText(
           'Вы не можете ограничить доступ самому себе!'
         );
-      if (user.Group === Group.Admin && !context.session.isTopAdmin)
+      if (user.Group === UserGroup.Admin && !context.session.isTopAdmin)
         return await context.editMessageText(
           'Вы не можете  ограничить доступ администратору!'
         );
 
-      if (user.Group === Group.WaitConfirm) {
+      if (user.Group === UserGroup.WaitConfirm) {
         await context.editMessageText('Выберите тип АЗС', {
           reply_markup: new InlineKeyboard()
             .text('Азс без магазина', `access_azs_${id}`)
@@ -205,11 +208,11 @@ function userGroup(usersRepository) {
             .text('Азс с магазином', `access_azsWithStore_${id}`),
         });
       } else if (
-        user.Group === Group.Azs ||
-        user.Group === Group.AzsWithStore ||
-        user.Group === Group.Admin
+        user.Group === UserGroup.Azs ||
+        user.Group === UserGroup.AzsWithStore ||
+        user.Group === UserGroup.Admin
       ) {
-        await usersRepository.updateUser(id, user.Name, Group.WaitConfirm);
+        await usersRepository.updateUser(id, user.Name, UserGroup.WaitConfirm);
         await context.editMessageText('Пользователю успешно ограничен доступ!');
       }
     } catch (error) {

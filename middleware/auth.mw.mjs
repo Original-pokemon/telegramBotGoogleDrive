@@ -7,7 +7,6 @@ export default function authMiddleware(bot, userRepository) {
       last_name: lastName,
       id: userId,
     } = context.chat;
-
     const firstPartUserName = [...firstName]
       .filter((item) => item !== ' ')
       .join('');

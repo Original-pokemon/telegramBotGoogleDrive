@@ -9,8 +9,13 @@ export default class QuestionRepository {
     return result.rows[0];
   }
 
-  async getQuestions(azs) {
-    const query = `SELECT * FROM "Question"  WHERE "Group" = '${azs}' OR "Group" = 'all';`;
+  /**
+   * Получить все вопросы для определнной АЗС
+   * @param {string} azsType Тип азс привязка к Group users
+   * @returns {object[]} array of questions
+   */
+  async getQuestions(azsType) {
+    const query = `SELECT * FROM "Question"  where '${azsType}' = ANY ("Group")`;
     const result = await this.sendQuery(query);
     return result.rows;
   }
@@ -28,16 +33,23 @@ export default class QuestionRepository {
     console.log('Successful remove:', result.rowCount);
   }
 
-  async addQuestion(name, text, Group, request) {
-    const query = `INSERT INTO "Question" ("Name", "Text", "Group", "Require") VALUES ('${name}', '${text}', '${Group}', ${request});`;
+  /**
+   *
+   * @param {string} name short name for question
+   * @param {string} text Full text of the question
+   * @param {string[]} group
+   * @param {boolean} require
+   */
+  async addQuestion(name, text, group, require) {
+    const query = `INSERT INTO "Question" ("Name", "Text", "Group", "Require") VALUES ('${name}', '${text}', '{${group}}', ${require});`;
     const result = await this.sendQuery(query);
     console.log('Successful add:', result.rowCount);
   }
 
-  async updateQuestion(id, name, text, group) {
+  async updateQuestion(id, name, text, group, require) {
     const query = `UPDATE "Question"
-	SET "Name" = '${name}', "Group" = '${group}', "Text" = '${text}'
-	WHERE "Id" = '${id}';`;
+	SET "Name" = '${name}', "Group" = '{${group}}', "Text" = '${text}', "Require" = ${require}
+	WHERE "Id" = ${id};`;
     await this.sendQuery(query);
   }
 }

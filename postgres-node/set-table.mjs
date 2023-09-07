@@ -33,7 +33,7 @@ const Models = {
   Question: `CREATE TABLE IF NOT EXISTS "Question"
   (
       "Id" BIGSERIAL NOT NULL,
-      "Group" text NOT NULL,
+      "Group" text[] NOT NULL,
       "Name" text COLLATE pg_catalog."default" NOT NULL,
       "Text" text COLLATE pg_catalog."default" NOT NULL,
       "Require" boolean NOT NULL DEFAULT false,

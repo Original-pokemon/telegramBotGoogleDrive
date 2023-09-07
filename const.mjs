@@ -30,11 +30,11 @@ const END_MSG_TEXT =
   `❗Если вы допустили ошибку можете изменить отправленную фотографию\n` +
   `Для этого нажмите "Показать все фото" и выберите фото, которое надо заменить❗`;
 
-constUserGroup = {
+const UserGroup = {
   Admin: 'admin',
   WaitConfirm: 'waitConfirm',
   Azs: 'azs',
-  AzsWithStore: 'azsWithoutStore',
+  AzsWithStore: 'azsWithStore',
 };
 
 export { END_MSG_TEXT, Options, REMINDER_MSG_TEXT, SHEDULE_TIME, UserGroup };
