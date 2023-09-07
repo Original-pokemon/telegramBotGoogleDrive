@@ -182,7 +182,7 @@ function userPromote(usersRepository) {
   };
 }
 
-function userGroup(usersRepository) {
+function userGroup(usersRepository, GroupRepository) {
   return async (context) => {
     try {
       const id = context.update.callback_query?.data.split('_')[1];
@@ -201,11 +201,16 @@ function userGroup(usersRepository) {
         );
 
       if (user.Group === UserGroup.WaitConfirm) {
+        const groups = await GroupRepository.getAllGroups();
+        const markup = new InlineKeyboard();
+        _.each(groups, ({ Name }) => {
+          if (Name !== UserGroup.Admin && Name !== UserGroup.WaitConfirm) {
+            markup.text(Name, `access_${Name}_${id}`).row();
+          }
+        });
+
         await context.editMessageText('Выберите тип АЗС', {
-          reply_markup: new InlineKeyboard()
-            .text('Азс без магазина', `access_azs_${id}`)
-            .row()
-            .text('Азс с магазином', `access_azsWithStore_${id}`),
+          reply_markup: markup,
         });
       } else if (
         user.Group === UserGroup.Azs ||
@@ -215,8 +220,10 @@ function userGroup(usersRepository) {
         await usersRepository.updateUser(id, user.Name, UserGroup.WaitConfirm);
         await context.editMessageText('Пользователю успешно ограничен доступ!');
       }
+      return true;
     } catch (error) {
       console.error(`admin.service > userGroup${error}`);
+      return false;
     }
   };
 }

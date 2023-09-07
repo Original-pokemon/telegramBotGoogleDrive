@@ -35,6 +35,7 @@ const UserGroup = {
   WaitConfirm: 'waitConfirm',
   Azs: 'azs',
   AzsWithStore: 'azsWithStore',
+  Gpn: 'gpn',
 };
 
 export { END_MSG_TEXT, Options, REMINDER_MSG_TEXT, SHEDULE_TIME, UserGroup };

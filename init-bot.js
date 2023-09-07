@@ -120,7 +120,7 @@ export default async function initBot(utilsGDrive) {
     userSearch(bot),
     userProfile(userRepository),
     userPromote(userRepository),
-    userGroup(userRepository),
+    userGroup(userRepository, groupRepository),
     updateGroup(userRepository),
     requestNewUserName(),
     editUserName(userRepository),

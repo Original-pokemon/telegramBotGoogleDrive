@@ -10,6 +10,7 @@ export default async function initBase(groupRepository) {
     await groupRepository.addGroup(UserGroup.WaitConfirm);
     await groupRepository.addGroup(UserGroup.AzsWithStore);
     await groupRepository.addGroup(UserGroup.Azs);
+    await groupRepository.addGroup(UserGroup.Gpn);
     return true;
   } catch (error) {
     console.error(`initBase: ${error}`);
