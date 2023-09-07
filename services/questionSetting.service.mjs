@@ -157,13 +157,13 @@ function checkAzsType() {
       switch (buttonData) {
         case 'azs_with_shop': {
           // Set the user session to 'azs_with_shop'
-          context.session.azs = 'azsWithStore';
+          context.session.azs = Group.AzsWithStore;
           break;
         }
 
         case 'azs_without_shop': {
           // Set the user session to 'azs_without_shop'
-          context.session.azs = 'azs';
+          context.session.azs = Group.Azs;
           break;
         }
 
@@ -285,8 +285,8 @@ function updateQuestionData(QuestionRepository) {
       case 'group': {
         const questionGroup =
           context.callbackQuery.data === 'azs_with_shop'
-            ? 'azsWithStore'
-            : 'azs';
+            ? Group.AzsWithStore
+            : Group.Azs;
         question.Group = questionGroup;
         break;
       }
