@@ -3,11 +3,11 @@ export default class GroupRepository {
     this.sendQuery = sendQuery;
   }
 
-  async getAllGrups() {
+  async getAllGroups() {
     const QUERY = 'SELECT * FROM "Group";';
 
     const result = await this.sendQuery(QUERY);
-    return result;
+    return result.rows;
   }
 
   async deleteGroup(GroupName) {
