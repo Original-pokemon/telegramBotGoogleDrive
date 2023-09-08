@@ -114,8 +114,8 @@ function userProfile(usersRepository) {
         );
 
       if (
-        user.Group === UserGroup.Azs ||
-        user.Group === UserGroup.WaitConfirm
+        user.Group !== UserGroup.Admin ||
+        user.Group !== UserGroup.WaitConfirm
       ) {
         const groupText =
           user.Group === UserGroup.Azs
