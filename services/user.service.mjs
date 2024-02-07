@@ -5,6 +5,17 @@ import _ from 'lodash';
 import { END_MSG_TEXT, Options } from '../const.mjs';
 import { deleteMessage } from '../utils.mjs';
 
+const handleFile = async (context) => {
+  let file;
+  await retry(async () => {
+    file = await context.getFile();
+  }, Options);
+
+  if (!file) {
+    throw new Error(`File not found: ${context}`);
+  }
+  return file;
+};
 const sendEndMessage = async (context) => {
   const markup = {
     reply_markup: new InlineKeyboard()
@@ -129,7 +140,7 @@ async function handlePhotoMessage(context, QuestionRepository) {
   context.session.lastMessageDate = messageDate;
   // Get file with retry on HttpError
   try {
-    const file = await context.getFile();
+    const file = await handleFile(context);
 
     const urlFile = file.getUrl();
 
@@ -248,7 +259,7 @@ function editPhoto() {
       const { answers } = context.session;
       const { answersIndex } = context.session;
       const photo = answers[answersIndex];
-      const file = await context.getFile();
+      const file = await handleFile(context);
 
       photo.id = file.file_id;
       photo.urlFile = file.getUrl();
@@ -272,11 +283,11 @@ async function sendPhotosToDrive(GoogleRepository, photos, folderId) {
 
       promises.push(promise);
     }, Options);
-
-    await Promise.allSettled(promises);
-
-    return true;
   });
+
+  await Promise.allSettled(promises);
+
+  return true;
 }
 
 function saveToGoogle(GoogleRepository) {
