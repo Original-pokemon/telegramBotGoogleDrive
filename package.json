@@ -1,6 +1,9 @@
 {
   "name": "telegrambotgoogledrive",
   "version": "1.0.0",
+  "engines": {
+    "node": "^12.20.0 || >=14.13.1"
+  },
   "type": "module",
   "main": "index.js",
   "scripts": {
