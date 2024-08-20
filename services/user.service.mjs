@@ -264,6 +264,7 @@ function editPhoto() {
       photo.id = file.file_id;
       photo.urlFile = file.getUrl();
 
+      delete context.session.answersIndex;
       await sendEndMessage(context);
     } catch (error) {
       console.error(`user.service > editPhoto ${error}`);
