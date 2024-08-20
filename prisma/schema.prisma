@@ -1,0 +1,57 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Group {
+  id       Int        @id @default(autoincrement())
+  name     String
+  user     User[]
+  question Question[]
+
+  @@map("groups")
+}
+
+model User {
+  id           Int           @id
+  group_id     Int
+  name         String
+  created_date DateTime      @default(now())
+  user_folder  String?
+  photo_folder PhotoFolder[]
+
+  group Group @relation(fields: [group_id], references: [id], onUpdate: Cascade, onDelete: Cascade)
+
+  @@map("users")
+}
+
+model PhotoFolder {
+  folder_id     String   @id
+  user_id       Int
+  creation_date DateTime @default(now())
+  user          User     @relation(fields: [user_id], references: [id], onUpdate: Cascade, onDelete: Cascade)
+
+  @@map("photo_folder")
+}
+
+model Question {
+  id       Int     @id @default(autoincrement())
+  group_id Int
+  Name     String
+  Text     String
+  Require  Boolean @default(false)
+
+  group Group @relation(fields: [group_id], references: [id], onUpdate: Cascade, onDelete: Cascade)
+
+  @@map("question")
+}
