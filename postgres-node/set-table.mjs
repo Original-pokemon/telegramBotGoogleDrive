@@ -23,8 +23,8 @@ const Models = {
   (
       "UserId" integer NOT NULL,
       "FolderId" text COLLATE pg_catalog."default" NOT NULL,
-      "СreationDate" date NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      CONSTRAINT "PhotoFolder_pkey" PRIMARY KEY ("UserId", "СreationDate"),
+      "CreationDate" date NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      CONSTRAINT "PhotoFolder_pkey" PRIMARY KEY ("FolderId"),
       CONSTRAINT "PhotoFolder_UserId_fkey" FOREIGN KEY ("UserId")
           REFERENCES "User" ("Id") MATCH SIMPLE
           ON UPDATE CASCADE
