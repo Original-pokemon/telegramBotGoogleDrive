@@ -1,4 +1,5 @@
 import { UserGroup } from '../const.mjs';
+import { config } from '../config.js';
 
 export default function authMiddleware(bot, userRepository) {
   return async (context, next) => {
@@ -19,12 +20,12 @@ export default function authMiddleware(bot, userRepository) {
       if (!user) {
         // If the user in database
         const group =
-          process.env.MAIN_ADMIN_ID === userId
+          config.MAIN_ADMIN_ID === userId
             ? UserGroup.Admin
             : UserGroup.WaitConfirm;
         user = await userRepository.addUser(userId, userName, group);
         bot.api.sendMessage(
-          process.env.MAIN_ADMIN_ID,
+          config.MAIN_ADMIN_ID,
           `new User: ${JSON.stringify(user, undefined, '\t')}`
         );
       } else if (context.update?.my_chat_member) {

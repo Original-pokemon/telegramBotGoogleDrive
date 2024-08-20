@@ -56,6 +56,7 @@ import {
   showPhotos,
   userPanel,
 } from './services/user.service.mjs';
+import { config } from './config.js';
 
 function getSessionKey(context) {
   return context.chat?.id.toString();
@@ -71,7 +72,7 @@ function createInitialSessionData() {
 }
 
 export default async function initBot(utilsGDrive) {
-  const bot = new Bot(process.env.BOT_TOKEN);
+  const bot = new Bot(config.BOT_TOKEN);
 
   const userRepository = new UsersRepository(sendQuery);
   const questionRepository = new QuestionRepository(sendQuery);

@@ -1,6 +1,6 @@
 import { InlineKeyboard, Keyboard } from 'grammy';
 import _ from 'lodash';
-
+import { config } from '../config.js';
 import { REMINDER_MSG_TEXT, UserGroup } from '../const.mjs';
 
 function adminPanel() {
@@ -283,14 +283,14 @@ function editUserName(usersRepository) {
   };
 }
 
-function createUserFolder(botInstance, Googlerepository, UsersRepository) {
+function createUserFolder(botInstance, GoogleRepository, UsersRepository) {
   return async (context) => {
     try {
       const id = context.update.callback_query?.data.split('_')[1];
       const user = await UsersRepository.getUser(id);
-      const response = await Googlerepository.makeFolder({
+      const response = await GoogleRepository.makeFolder({
         folderName: user.Name,
-        parentIdentifiers: { fileName: process.env.MAIN_FOLDER_NAME },
+        parentIdentifiers: { fileName: config.MAIN_FOLDER_NAME },
       });
       await UsersRepository.updateUser(id, user.Name, user.Group, response);
       console.log('Success created userFolder:', response);
