@@ -290,7 +290,7 @@ function createUserFolder(botInstance, GoogleRepository, UsersRepository) {
       const user = await UsersRepository.getUser(id);
       const response = await GoogleRepository.makeFolder({
         folderName: user.Name,
-        parentIdentifiers: { fileName: config.MAIN_FOLDER_NAME },
+        parentIdentifiers: config.MAIN_FOLDER_ID,
       });
       await UsersRepository.updateUser(id, user.Name, user.Group, response);
       console.log('Success created userFolder:', response);

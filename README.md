@@ -33,11 +33,16 @@
     ```
 
 3. **Настройка Google Drive API**
-    - Перейдите на [Google Cloud Console](https://console.cloud.google.com/).
-    - Создайте новый проект.
-    - Включите Google Drive API для вашего проекта.
-    - Создайте OAuth 2.0 Client ID и загрузите JSON файл с учетными данными.
-    - Поместите JSON файл в корень проекта и переименуйте его в `credentials.json`.
+    1. Перейдите на [Google Cloud Console](https://console.cloud.google.com/).
+    2. Создайте новый проект.
+    3. Включите Google Drive API для вашего проекта.
+    4. Перейдите в раздел "IAM & Admin" > "Service Accounts" и создайте сервисный аккаунт.
+    5. Сгенерируйте ключ в формате JSON и скачайте его.
+    6. Убедитесь, что JSON-файл с ключом доступен вашему приложению через переменную окружения `GOOGLE_APPLICATION_CREDENTIALS`.
+    7. Предоставьте сервисному аккаунту доступ к папке, в которой будет работать бот (`MAIN_FOLDER_ID`):
+    - Зайдите в Google Drive и найдите папку.
+    - Нажмите правой кнопкой мыши на папку и выберите "Открыть доступ".
+    - Введите email сервисного аккаунта и выберите уровень доступа ("Редактор").
 
 4. **Настройка Telegram Bot**
     - Перейдите в Telegram и найдите BotFather.
@@ -50,13 +55,10 @@
 5. **Настройка переменных окружения**
     Добавьте в файл `.env` следующие переменные окружения:
     ```env
-    PG_HOST=''               # Адрес хоста базы данных PostgreSQL
-    PG_PORT=''               # Порт для подключения к базе данных PostgreSQL
-    PG_USER=''               # Имя пользователя для подключения к базе данных PostgreSQL
-    PG_PASSWORD=''           # Пароль пользователя для подключения к базе данных PostgreSQL
-    PG_DATABASE=''           # Имя базы данных PostgreSQL
+    DATABASE_URL=''           # Ссылка для подключения к базе данных PostgreSQL в формате postgres://PG_USER:PG_PASSWORD@PG_HOST:PG_PORT/
     MAIN_ADMIN_ID=''         # Telegram ID основного администратора бота
-    MAIN_FOLDER_NAME='TelegarmBotORTK'  # Название основной папки на Google Drive для хранения фотографий
+    MAIN_FOLDER_ID=''        # ID папки Google Drive, где будут сохраняться файлы
+    GOOGLE_APPLICATION_CREDENTIALS='' # Путь к JSON-файлу с ключами сервисного аккаунта
     ```
 
 6. **Запуск бота**

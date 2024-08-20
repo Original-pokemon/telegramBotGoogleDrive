@@ -1,6 +1,6 @@
 import dotenv from 'dotenv';
 
-import { initGoogleDrive } from './google-drive/init-google-drive.mjs';
+import googleRepository from './google-drive/index.js';
 import initBot from './init-bot.js';
 import initBase from './postgres-node/init-base.mjs';
 import sendQuery from './postgres-node/send-query.mjs';
@@ -14,9 +14,6 @@ const groupRepository = new GroupRepository(sendQuery);
 
 await initBase(groupRepository);
 
-const utilsGDrive = await initGoogleDrive({
-  credentials: './credentials.json',
-  token: './token.json',
-});
+await googleRepository.init()
 
-await initBot(utilsGDrive);
+await initBot(googleRepository);
