@@ -1,4 +1,4 @@
-import { UserGroup } from '../const.mjs';
+import { UserGroup } from '../const.js';
 import createSchema from './set-schema.mjs';
 import createTable from './set-table.mjs';
 

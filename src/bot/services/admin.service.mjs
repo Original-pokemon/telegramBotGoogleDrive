@@ -1,7 +1,8 @@
 import { InlineKeyboard, Keyboard } from 'grammy';
 import _ from 'lodash';
-import { config } from '../config.js';
-import { REMINDER_MSG_TEXT, UserGroup } from '../const.mjs';
+import { config } from '../../config.js';
+import { UserGroup } from '../../const.js';
+import { REMINDER_MSG_TEXT } from '../const.js';
 
 function adminPanel() {
   return async (context) => {

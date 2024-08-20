@@ -2,7 +2,7 @@ import retry from 'async-retry';
 import { InlineKeyboard } from 'grammy';
 import _ from 'lodash';
 
-import { END_MSG_TEXT, Options } from '../const.mjs';
+import { END_MSG_TEXT, Options } from '../const.js';
 import { deleteMessage } from '../utils.mjs';
 
 const handleFile = async (context) => {

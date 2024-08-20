@@ -1,6 +1,9 @@
 import axios from 'axios';
 import { google } from 'googleapis';
 import { config } from '../config.js';
+import fs from 'fs/promises';
+import { logger } from '../logger.js'
+import { log } from 'console';
 
 class GoogleRepository {
   constructor() {
@@ -8,6 +11,14 @@ class GoogleRepository {
   }
 
   async init() {
+    try {
+      await fs.access(config.GOOGLE_APPLICATION_CREDENTIALS);
+    } catch (error) {
+      const errorMessage = `Google credentials file not found. The application cannot be started. Error: ${error.message}`;
+      logger.fatal(errorMessage);
+      process.exit(1)
+    }
+
     const auth = new google.auth.GoogleAuth({
       keyFile: config.GOOGLE_APPLICATION_CREDENTIALS,
       scopes: ['https://www.googleapis.com/auth/drive'],
@@ -17,6 +28,7 @@ class GoogleRepository {
     this.drive = google.drive({ version: 'v3', auth: client });
 
     await this.checkMainFolderAccess();
+    logger.info('Google Drive API successfully initialized.');
   }
 
   async checkMainFolderAccess() {
@@ -31,15 +43,17 @@ class GoogleRepository {
       console.log(`Main folder found: ${res.data.name} (ID: ${res.data.id})`);
     } catch (error) {
       if (error.code === 404) {
-        console.error('Main folder not found or access is denied.');
+        logger.error('Main folder not found or access is denied.');
       } else {
-        console.error('Error accessing the main folder:', error);
+        logger.error('Error accessing the main folder:', error);
       }
       throw error;
     }
   }
 
   async makeFolder({ folderName, parentIdentifiers }) {
+    logger.debug(`Creating folder ${folderName}...`);
+
     const folder = await this.drive.files.create({
       resource: {
         name: folderName,
@@ -57,11 +71,13 @@ class GoogleRepository {
       },
     });
 
+    logger.debug(`Folder ${folderName} created.`);
     return folder.data.id;
   }
 
   async upload({ urlPath, fileName, parentIdentifiers }) {
     try {
+      logger.debug(`Uploading file ${fileName} to Google Drive...`);
       const response = await axios.get(urlPath, {
         responseType: 'stream',
       });
@@ -89,10 +105,10 @@ class GoogleRepository {
           type: 'anyone',
         },
       });
-
+      logger.debug(`File ${fileName} uploaded to Google Drive.`);
       return file.data.id;
     } catch (error) {
-      console.error('Error uploading file:', error);
+      logger.error('Error uploading file:', error);
       throw error;
     }
   }

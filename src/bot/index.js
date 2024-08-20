@@ -9,15 +9,15 @@ import { run, sequentialize } from '@grammyjs/runner';
 import { PsqlAdapter } from '@grammyjs/storage-psql';
 import { apiThrottler } from '@grammyjs/transformer-throttler';
 
-import adminRoute from './bot/admin.route.mjs';
-import questionSettingRoute from './bot/question-setting.route.mjs';
-import sheduleRoute from './bot/schedule.route.mjs';
-import startRoute from './bot/start.route.mjs';
-import userRoute from './bot/user.route.mjs';
+import adminRoute from './features/admin.js';
+import questionSettingRoute from './features/question-setting.js';
+import scheduleRoute from './features/schedule.js';
+import startRoute from './features/start.js';
+import userRoute from './features/user.js';
 import authMiddleware from './middleware/auth.mw.mjs';
 import responseTimeMiddleware from './middleware/response-time.mw.mjs';
-import getClient from './postgres-node/get-client.mjs';
-import sendQuery from './postgres-node/send-query.mjs';
+import getClient from '../postgres-node/get-client.mjs';
+import sendQuery from '../postgres-node/send-query.mjs';
 import GroupRepository from './repositories/group.repositoy.mjs';
 import QuestionRepository from './repositories/question.repository.mjs';
 import UsersRepository from './repositories/user.repository.mjs';
@@ -56,7 +56,7 @@ import {
   showPhotos,
   userPanel,
 } from './services/user.service.mjs';
-import { config } from './config.js';
+import { config } from '../config.js';
 
 function getSessionKey(context) {
   return context.chat?.id.toString();
@@ -71,7 +71,7 @@ function createInitialSessionData() {
   };
 }
 
-export default async function initBot(utilsGDrive) {
+export default async function createBot(token, dependencies, options = {}) {
   const bot = new Bot(config.BOT_TOKEN);
 
   const userRepository = new UsersRepository(sendQuery);
@@ -131,7 +131,7 @@ export default async function initBot(utilsGDrive) {
     sendNewsletterForAll(userRepository, bot)
   );
 
-  sheduleRoute(bot, schedule, sendReminderMessage(bot, userRepository));
+  scheduleRoute(bot, schedule, sendReminderMessage(bot, userRepository));
 
   userRoute(
     bot,

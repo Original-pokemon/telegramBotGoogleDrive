@@ -1,10 +1,10 @@
 import dotenv from 'dotenv';
 
 import googleRepository from './google-drive/index.js';
-import initBot from './init-bot.js';
+import createBot from './bot/index.js';
 import initBase from './postgres-node/init-base.mjs';
 import sendQuery from './postgres-node/send-query.mjs';
-import GroupRepository from './repositories/group.repositoy.mjs';
+import GroupRepository from './bot/repositories/group.repositoy.mjs';
 
 dotenv.config();
 
@@ -16,4 +16,4 @@ await initBase(groupRepository);
 
 await googleRepository.init()
 
-await initBot(googleRepository);
+await createBot(googleRepository);

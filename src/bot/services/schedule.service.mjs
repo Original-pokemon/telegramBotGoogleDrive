@@ -1,6 +1,6 @@
 import { InlineKeyboard } from 'grammy';
 
-import { REMINDER_MSG_TEXT } from '../const.mjs';
+import { REMINDER_MSG_TEXT } from '../const.js';
 import { deleteMessage } from '../utils.mjs';
 
 const HOUR_WAIT = 1;

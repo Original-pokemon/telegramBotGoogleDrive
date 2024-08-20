@@ -1,7 +1,7 @@
 import { InlineKeyboard } from 'grammy';
 import _ from 'lodash';
 
-import { UserGroup } from '../const.mjs';
+import { UserGroup } from '../../const.js';
 
 function questionPanel() {
   return async (context) => {

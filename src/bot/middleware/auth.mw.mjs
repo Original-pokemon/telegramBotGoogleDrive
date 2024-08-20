@@ -1,5 +1,5 @@
-import { UserGroup } from '../const.mjs';
-import { config } from '../config.js';
+import { UserGroup } from '../../const.js';
+import { config } from '../../config.js';
 
 export default function authMiddleware(bot, userRepository) {
   return async (context, next) => {

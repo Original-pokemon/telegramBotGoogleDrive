@@ -11,7 +11,7 @@ const Options = {
 /**
  * @constant{string} The time at which the reminder is sent
  */
-const SHEDULE_TIME = '10:00';
+const SCHEDULE_TIME = '10:00';
 
 /**
  * @constant{string}
@@ -30,12 +30,9 @@ const END_MSG_TEXT =
   `❗Если вы допустили ошибку можете изменить отправленную фотографию\n` +
   `Для этого нажмите "Показать все фото" и выберите фото, которое надо заменить❗`;
 
-const UserGroup = {
-  Admin: 'admin',
-  WaitConfirm: 'waitConfirm',
-  Azs: 'azs',
-  AzsWithStore: 'azsWithStore',
-  Gpn: 'gpn',
-};
+export const START_MSG =
+  `👋 Приветствую!
+📸Данный бот предназначен для сбора фотографий.
+🔒Как только Вам выдадут доступ этот бот будет присылать Вам уведомления о необходимости прохождении проверки стандартов`
 
-export { END_MSG_TEXT, Options, REMINDER_MSG_TEXT, SHEDULE_TIME, UserGroup };
+export { END_MSG_TEXT, Options, REMINDER_MSG_TEXT, SCHEDULE_TIME };

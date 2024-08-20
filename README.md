@@ -75,58 +75,29 @@
 ```plaintext
 telegrambotgoogledrive/
 │
-├── bot/
-│   ├── admin.route.mjs
-│   ├── question-setting.route.mjs
-│   ├── schedule.route.mjs
-│   ├── start.route.mjs
-│   └── user.route.mjs
-│
-├── google-drive/
-│   └── init-google-drive.mjs
-│
-├── middleware/
-│   ├── auth.mw.mjs
-│   └── response-time.mw.mjs
-│
-├── node_modules/
-│
-├── postgres-node/
-│   ├── get-client.mjs
-│   ├── init-base.mjs
-│   ├── models.mjs
-│   ├── send-query.mjs
-│   ├── set-schema.mjs
-│   └── set-table.mjs
-│
-├── repositories/
-│   ├── group.repository.mjs
-│   ├── photoFolder.mjs
-│   ├── question.repository.mjs
-│   └── user.repository.mjs
-│
-├── services/
-│   ├── admin.service.mjs
-│   ├── question-setting.service.mjs
-│   ├── schedule.service.mjs
-│   ├── start.service.mjs
-│   └── user.service.mjs
-│
-├── vendor/
-│
-├── ecosystem.config.js
-├── index.js
-├── package-lock.json
-└── package.json
+├── src/
+│   ├── bot/
+│   │   ├── features/
+│   │   ├── middleware/
+│   │   ├── repositories/
+│   │   └── services/
+│   ├── google-drive/
+│   │   └── init-google-drive.js
+│   ├── postgres-node/
+│   │   ├── config.js
+│   │   ├── const.js
+│   │   └── init-base.js
+│   ├── config.js
+│   ├── const.js
+│   ├── logger.js
+│   └── main.js
 ```
 
 ## Описание директорий и файлов
 
-- bot/: Отвечает за маршрутизацию (контроллеры).
-- google-drive/: Отвечает за инициализацию Google Drive.
+- src/bot/: Содержит основные модули бота, такие как функции (features), middleware, репозитории и сервисы.
+- src/google-drive/: Отвечает за интеграцию с Google Drive.
 - middleware/: Содержит middleware для аутентификации и измерения времени ответа.
-- postgres-node/: Содержит модули для работы с PostgreSQL.
-- repositories/: Содержит репозитории для работы с данными.
-- services/: Содержит сервисы для обработки логики приложения.
-- index.js: Главный файл запуска приложения.
-- ecosystem.config.js: Конфигурационный файл для управления процессами.
+- src/postgres-node/: Содержит конфигурации и модули для работы с PostgreSQL.
+- src/config.js: Файл конфигурации приложения.
+- src/main.js: Главный файл для запуска приложения.

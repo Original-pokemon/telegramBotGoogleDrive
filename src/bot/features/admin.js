@@ -1,4 +1,4 @@
-import { UserGroup } from '../const.mjs';
+import { UserGroup } from '../../const.js';
 
 export default function adminRoute(
   botInstance,
