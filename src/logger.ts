@@ -36,4 +36,8 @@ const createLogger = async () => {
   });
 };
 
-export const logger = await createLogger();
+const logger = await createLogger();
+
+export default logger
+
+export type Logger = typeof logger;
