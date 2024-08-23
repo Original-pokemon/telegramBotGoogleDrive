@@ -14,17 +14,16 @@ datasource db {
 }
 
 model Group {
-  id       Int        @id @default(autoincrement())
-  name     String
+  id       String        @id
   user     User[]
-  question Question[]
+  question Question[]  @relation("question_to_group")
 
   @@map("groups")
 }
 
 model User {
   id           Int           @id
-  group_id     Int
+  group_id     String
   name         String
   created_date DateTime      @default(now())
   user_folder  String?
@@ -46,12 +45,11 @@ model PhotoFolder {
 
 model Question {
   id       Int     @id @default(autoincrement())
-  group_id Int
-  Name     String
-  Text     String
-  Require  Boolean @default(false)
+  name     String
+  text     String
+  require  Boolean @default(false)
 
-  group Group @relation(fields: [group_id], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  group Group[] @relation("question_to_group")
 
   @@map("question")
 }
