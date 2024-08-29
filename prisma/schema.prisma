@@ -22,7 +22,7 @@ model Group {
 }
 
 model User {
-  id           Int           @id
+  id           String           @id
   group_id     String
   name         String
   created_date DateTime      @default(now())
@@ -36,7 +36,7 @@ model User {
 
 model PhotoFolder {
   folder_id     String   @id
-  user_id       Int
+  user_id       String
   creation_date DateTime @default(now())
   user          User     @relation(fields: [user_id], references: [id], onUpdate: Cascade, onDelete: Cascade)
 
