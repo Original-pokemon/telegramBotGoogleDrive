@@ -34,7 +34,7 @@ class DataBase implements IDataBase {
     })
 
     prisma.$on('query', (event: Prisma.QueryEvent) => {
-      logger.debug({
+      logger.trace({
         msg: 'database query',
         query: event.query,
         params: event.params,
