@@ -1,0 +1,85 @@
+import { type Api, Context as DefaultContext, SessionFlavor } from "grammy";
+import { UserType } from './types/user.js';
+import type { ParseModeFlavor } from "@grammyjs/parse-mode";
+import { Logger } from '#root/logger.js';
+import { FileFlavor } from '@grammyjs/files';
+import { HydrateFlavor } from '@grammyjs/hydrate';
+import { Update, UserFromGetMe } from "grammy/types";
+import { Config } from "#root/config.js";
+import QuestionRepository from "./repositories/question.repository.js";
+import UsersRepository from "./repositories/user.repository.js";
+import PhotoFolderRepository from "./repositories/photoFolder.js";
+import GroupRepository from "./repositories/group.repository.js";
+import { GoogleRepositoryType } from "#root/google-drive/index.js";
+import { Question, User } from "@prisma/client";
+import { AnswerType } from "./types/answer.js";
+import { ConversationFlavor } from "@grammyjs/conversations";
+
+export type SessionData = {
+  scene: string
+  user: User;
+  isAdmin: boolean;
+  answers: (AnswerType | undefined)[];
+  questions: Question[]
+  customData: { [key: string]: unknown };
+};
+
+export type RepositoryType = {
+  googleDrive: GoogleRepositoryType;
+  users: UsersRepository;
+  groups: GroupRepository;
+  questions: QuestionRepository;
+  photoFolders: PhotoFolderRepository;
+}
+
+type ExtendedContextFlavor = {
+  logger: Logger;
+  repositories: RepositoryType;
+  config: Config
+};
+
+export type Context = ParseModeFlavor<
+  FileFlavor<
+    HydrateFlavor<
+      DefaultContext &
+      ExtendedContextFlavor &
+      SessionFlavor<SessionData> &
+      ConversationFlavor
+    >
+  >
+>;
+
+interface Dependencies {
+  logger: Logger;
+  repositories: RepositoryType;
+  config: Config
+}
+
+export function createContextConstructor(
+  {
+    logger,
+    repositories,
+    config
+  }: Dependencies,
+) {
+  return class extends DefaultContext implements ExtendedContextFlavor {
+    logger: Logger
+
+    repositories: RepositoryType
+
+    config: Config
+
+
+    constructor(update: Update, api: Api, me: UserFromGetMe) {
+      super(update, api, me)
+
+      this.logger = logger.child({
+        update_id: this.update.update_id,
+      })
+
+      this.repositories = repositories
+
+      this.config = config
+    }
+  } as unknown as new (update: Update, api: Api, me: UserFromGetMe) => Context;
+} 

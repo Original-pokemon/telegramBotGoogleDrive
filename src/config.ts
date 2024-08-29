@@ -8,7 +8,7 @@ const configSchema = z.object({
     .default("info"),
   NODE_ENV: z.enum(["development", "production"]),
   BOT_TOKEN: z.string(),
-  MAIN_ADMIN_ID: z.coerce.number().safe(),
+  MAIN_ADMIN_ID: z.coerce.string(),
   MAIN_FOLDER_ID: z.string(),
   GOOGLE_APPLICATION_CREDENTIALS: z.string(),
 });
