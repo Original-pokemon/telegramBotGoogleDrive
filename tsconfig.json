@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    "target": "ES2021", // Версия JavaScript для компиляции
+    "module": "NodeNext", // Система модулей
+    "preserveWatchOutput": true,
+    "strict": true, // Включает строгую проверку типов
+    "esModuleInterop": true, // Совместимость с ES6 модулями
+    "skipLibCheck": true, // Пропуск проверки типов библиотек
+    "forceConsistentCasingInFileNames": true, // Следует ли учитывать регистр символов в названиях файлов
+    "sourceMap": true, // Включает генерацию карты исходного кода
+    "outDir": "dist", // Директория для скомпилированных файлов
+    "rootDir": ".", // Исходная директория файлов TypeScript
+    "allowJs": true,
+    "paths": {
+      "#root/*": [
+        "./src/*"
+      ]
+    }
+  },
+  "include": [
+    "src/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+  ]
+}
