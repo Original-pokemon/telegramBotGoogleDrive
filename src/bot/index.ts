@@ -10,6 +10,7 @@ import { apiThrottler } from '@grammyjs/transformer-throttler';
 import { GoogleRepositoryType } from '../google-drive/index.js'
 
 import { adminFeature } from './features/admin.js';
+import { startFeature } from './features/start.js';
 import authMiddleware from './middleware/auth.mw.js';
 import GroupRepository from './repositories/group.repository.js';
 import QuestionRepository from './repositories/question.repository.js';
@@ -94,6 +95,7 @@ export default async function createBot(token: string, dependencies: Dependencie
   bot.use(authMiddleware());
   bot.use(conversationsFeature)
 
+  bot.use(startFeature)
   bot.use(adminFeature)
 
   bot.api.setMyCommands([{ command: 'start', description: 'Start the bot' }]);
