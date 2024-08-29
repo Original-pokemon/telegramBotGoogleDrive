@@ -8,6 +8,8 @@ import { run, sequentialize } from '@grammyjs/runner';
 import { PsqlAdapter } from '@grammyjs/storage-psql';
 import { apiThrottler } from '@grammyjs/transformer-throttler';
 import { GoogleRepositoryType } from '../google-drive/index.js'
+
+import { adminFeature } from './features/admin.js';
 import GroupRepository from './repositories/group.repository.js';
 import QuestionRepository from './repositories/question.repository.js';
 import UsersRepository from './repositories/user.repository.js';
@@ -15,6 +17,7 @@ import { Config } from '../config.js';
 import logger, { Logger } from '#root/logger.js';
 import { Context, createContextConstructor, SessionData } from './context.js';
 import PhotoFolderRepository from './repositories/photoFolder.js';
+import { createConversationFeature } from './conversations/conversations.js';
 
 interface Dependencies {
   config: Config
@@ -76,6 +79,7 @@ export default async function createBot(token: string, dependencies: Dependencie
       retryOnInternalServerErrors: true,
     })
   );
+  const conversationsFeature = createConversationFeature(repositories)
 
   bot.use(sequentialize(getSessionKey));
 
@@ -85,6 +89,10 @@ export default async function createBot(token: string, dependencies: Dependencie
       initial: createInitialSessionData,
     })
   );
+
+  bot.use(conversationsFeature)
+
+  bot.use(adminFeature)
 
   bot.api.setMyCommands([{ command: 'start', description: 'Start the bot' }]);
 

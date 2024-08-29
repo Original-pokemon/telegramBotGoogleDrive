@@ -5,7 +5,7 @@ const Options = {
   retries: 5,
   minTimeout: 1000,
   maxTimeout: 5000,
-  onRetry: (error) => console.log(`Error: ${error.message}. Retrying...`),
+  onRetry: (error: Error) => console.log(`Error: ${error.message}. Retrying...`),
 };
 
 /**
