@@ -4,7 +4,7 @@ import { Question } from "@prisma/client";
 
 
 export default class QuestionRepository extends Repository {
-  async getQuestion(id: number): Promise<Question | null> {
+  async getQuestion(id: number) {
     logger.trace(`Attempting to find question with id: ${id}`);
     try {
       const question = await this.client.question.findUnique({
@@ -89,7 +89,7 @@ export default class QuestionRepository extends Repository {
     }
   }
 
-  async addQuestion({ id, name, require, text, groupIds }: Question & { groupIds: string[] }): Promise<Question> {
+  async addQuestion({ name, require, text, groupIds }: Omit<Question, 'id'> & { groupIds: string[] }): Promise<Question> {
     logger.trace(`Attempting to add question with name: ${name}`);
     try {
       const newQuestion = await this.client.question.create({

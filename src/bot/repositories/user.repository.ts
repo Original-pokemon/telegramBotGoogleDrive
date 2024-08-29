@@ -4,7 +4,7 @@ import { UserGroup } from "../../const.js";
 import logger from "#root/logger.js";
 
 export default class UsersRepository extends Repository {
-  async getUser(id: number): Promise<User | null> {
+  async getUser(id: string): Promise<User | null> {
     logger.trace(`Attempting to find user with id: ${id}`);
     try {
       const user = await this.client.user.findUnique({
@@ -63,7 +63,7 @@ export default class UsersRepository extends Repository {
     }
   }
 
-  async deleteUser(id: number): Promise<void> {
+  async deleteUser(id: string): Promise<void> {
     logger.trace(`Attempting to delete user with id: ${id}`);
     try {
       await this.client.user.delete({
