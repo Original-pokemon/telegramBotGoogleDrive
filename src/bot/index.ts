@@ -8,9 +8,13 @@ import { run, sequentialize } from '@grammyjs/runner';
 import { PsqlAdapter } from '@grammyjs/storage-psql';
 import { apiThrottler } from '@grammyjs/transformer-throttler';
 import { GoogleRepositoryType } from '../google-drive/index.js'
+import GroupRepository from './repositories/group.repository.js';
+import QuestionRepository from './repositories/question.repository.js';
+import UsersRepository from './repositories/user.repository.js';
 import { Config } from '../config.js';
 import logger, { Logger } from '#root/logger.js';
 import { Context, createContextConstructor, SessionData } from './context.js';
+import PhotoFolderRepository from './repositories/photoFolder.js';
 
 interface Dependencies {
   config: Config
@@ -46,11 +50,19 @@ export default async function createBot(token: string, dependencies: Dependencie
     googleRepository
   } = dependencies
 
+  const repositories = {
+    users: new UsersRepository(),
+    groups: new GroupRepository(),
+    questions: new QuestionRepository(),
+    photoFolders: new PhotoFolderRepository(),
+    googleDrive: googleRepository
+  }
 
   const bot = new TelegramBot(token, {
     ...options.botConfig,
     ContextConstructor: createContextConstructor({
       logger,
+      repositories,
       config,
     }),
   })
