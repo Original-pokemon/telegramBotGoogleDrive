@@ -13,11 +13,15 @@ export async function deleteQuestion(ctx: CallbackQueryContext<Context>) {
     await repositories.questions.deleteQuestion(questionId);
     await ctx.editMessageText(SUCCESS_DELETE_MESSAGE);
 
-    logger.debug(`Question with ID: ${questionId} successfully deleted`);
+    logger.info(`Question with ID: ${questionId} successfully deleted`);
 
     delete ctx.session.customData.question;
   } catch (error) {
-    console.error('Ошибка в функции deleteQuestion:', error);
+    if (error instanceof Error) {
+      logger.error(`Error in deleteQuestion function: ${error.message}`);
+    } else {
+      logger.error('Unknown error occurred in deleteQuestion function.');
+    }
     await ctx.reply(ERROR_DELETE_MESSAGE);
   }
 };

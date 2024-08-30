@@ -4,13 +4,16 @@ import { generateQuestionProfileText } from "#root/bot/helpers/index.js";
 import { CallbackQueryContext, InlineKeyboard } from "grammy";
 
 export async function questionProfile(ctx: CallbackQueryContext<Context>) {
-  const { repositories, callbackQuery } = ctx
+  const { repositories, callbackQuery, logger } = ctx
 
-  const { questionId } = questionProfileData.unpack(callbackQuery.data)
+  const { questionId } = questionProfileData.unpack(callbackQuery.data);
+  logger.debug(`Fetching question with ID: ${questionId}`);
+
   const question = await repositories.questions.getQuestion(questionId);
 
   if (!question) {
-    await ctx.editMessageText('Вопрос не найден');
+    logger.warn(`Question with ID ${questionId} not found.`);
+    await ctx.editMessageText('Вопрос не найден');
     return;
   }
 
@@ -22,6 +25,8 @@ export async function questionProfile(ctx: CallbackQueryContext<Context>) {
       ])
     }
   );
+
+  logger.info(`Displayed profile for question ID: ${questionId}`);
 
   ctx.session.customData.question = question;
 };
