@@ -3,6 +3,7 @@ import { Composer } from "grammy";
 
 import { conversations } from "@grammyjs/conversations";
 import {
+  createEditQuestionConversation,
   createQuestionConversation
 } from "./index.js";
 import logger from "#root/logger.js";
@@ -17,6 +18,7 @@ const createConversationFeature = (repositories: RepositoryType) => {
   feature.use(conversations());
 
   feature.use(createQuestionConversation(repositories));
+  feature.use(createEditQuestionConversation(repositories));
 
   return composer;
 };

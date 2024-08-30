@@ -20,6 +20,7 @@ import { Config } from '../config.js';
 import logger, { Logger } from '#root/logger.js';
 import { Context, createContextConstructor, SessionData } from './context.js';
 import PhotoFolderRepository from './repositories/photoFolder.js';
+import { questionSettingFeature } from './features/question-setting.js';
 import { createConversationFeature } from './conversations/conversations.js';
 
 interface Dependencies {
@@ -100,6 +101,7 @@ export default async function createBot(token: string, dependencies: Dependencie
   bot.use(startFeature)
   bot.use(adminFeature)
   bot.use(scheduleFeature)
+  bot.use(questionSettingFeature)
 
   bot.api.setMyCommands([{ command: 'start', description: 'Start the bot' }]);
 
