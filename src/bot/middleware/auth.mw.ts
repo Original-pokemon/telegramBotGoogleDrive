@@ -49,15 +49,15 @@ export default function authMiddleware(): Middleware<Context> {
         await users.deleteUser(userId);
       }
 
-      ctx.session.user = user;
+      ctx.session.memory.user = user;
 
       if (user.group_id === UserGroup.Admin) {
-        ctx.session.isAdmin = true
+        ctx.session.memory.isAdmin = true
       } else {
-        ctx.session.isAdmin = false
+        ctx.session.memory.isAdmin = false
       };
 
-      next();
+      await next();
     } catch (error) {
       console.error('auth.mv: \n', error);
     }

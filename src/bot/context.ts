@@ -15,13 +15,21 @@ import { Question, User } from "@prisma/client";
 import { AnswerType } from "./types/answer.js";
 import { ConversationFlavor } from "@grammyjs/conversations";
 
-export type SessionData = {
-  scene: string
-  user: User;
+export type MemorySessionData = {
   isAdmin: boolean;
+  user: User;
+}
+
+export type ExternalSessionData = {
+  scene: string
   answers: (AnswerType | undefined)[];
   questions: Question[]
   customData: { [key: string]: unknown };
+}
+
+export type SessionData = {
+  memory: MemorySessionData
+  external: ExternalSessionData
 };
 
 export type RepositoryType = {

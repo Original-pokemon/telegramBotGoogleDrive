@@ -11,9 +11,9 @@ export async function requestNewUserName(ctx: CallbackQueryContext<Context>) {
     const { userId } = editNameData.unpack(callbackQuery.data);
     logger.debug(`Requesting new username for userId: ${userId}`);
     await ctx.editMessageText(NEW_USER_NAME_TEXT);
-    session.scene = 'enter_name';
-    session.customData = session.customData || {};
-    session.customData.userId = userId;
+    session.external.scene = 'enter_name';
+    session.external.customData = session.external.customData || {};
+    session.external.customData.userId = userId;
 
     logger.info(`User ID ${userId} stored in session for renaming.`);
   } catch (error: unknown) {

@@ -4,7 +4,7 @@ import { adminPanelTexts } from "../text.js";
 export async function newsletterPanel(ctx: Context) {
   ctx.logger.trace("Newsletter panel command invoked");
 
-  ctx.session.scene = 'enter_letter_text';
+  ctx.session.external.scene = 'enter_letter_text';
   ctx.logger.debug("Session scene set to 'enter_letter_text'");
 
   try {

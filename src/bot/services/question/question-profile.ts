@@ -28,5 +28,5 @@ export async function questionProfile(ctx: CallbackQueryContext<Context>) {
 
   logger.info(`Displayed profile for question ID: ${questionId}`);
 
-  ctx.session.customData.question = question;
+  ctx.session.external.customData.question = question;
 };

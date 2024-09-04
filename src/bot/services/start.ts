@@ -11,7 +11,7 @@ export default async function start(ctx: Context) {
     let buttons = new InlineKeyboard();
     ctx.logger.debug("InlineKeyboard instance created");
 
-    if (ctx.session.isAdmin) {
+    if (ctx.session.memory.isAdmin) {
       ctx.logger.debug("User is admin, adding admin panel button");
       buttons = buttons
         .text('Открыть панель администратора', UserGroup.Admin)

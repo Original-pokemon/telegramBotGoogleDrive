@@ -16,13 +16,13 @@ export async function promoteUser(ctx: CallbackQueryContext<Context>) {
       return await ctx.editMessageText('Пользователь не найден!');
     }
 
-    if (!session.isAdmin) {
-      logger.warn(`Unauthorized promotion attempt by non-admin user with session ID: ${session.user.id}`);
+    if (!session.memory.isAdmin) {
+      logger.warn(`Unauthorized promotion attempt by non-admin user with session ID: ${session.memory.user.id}`);
       return await ctx.editMessageText('Вы не администратор!');
     }
 
     if (user.group_id === UserGroup.Admin) {
-      if (userId === session.user.id) {
+      if (userId === session.memory.user.id) {
         logger.warn('Attempt to restrict access to oneself.');
         return await ctx.editMessageText('Вы не можете ограничить доступ самому себе!');
       }

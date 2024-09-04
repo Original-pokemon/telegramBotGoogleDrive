@@ -21,7 +21,7 @@ const AdminButtons = {
 type SceneType = typeof Scene[keyof typeof Scene];
 
 const composer = new Composer<Context>()
-const feature = composer.chatType('private').filter(({ session }) => session.isAdmin);
+const feature = composer.chatType('private').filter(({ session }) => session.memory.isAdmin);
 
 feature.callbackQuery(UserGroup.Admin, adminPanel);
 feature.callbackQuery(userIdData.filter(), userProfile);
@@ -36,7 +36,7 @@ feature.hears(AdminButtons.FIND_USER, userSearch);
 feature.hears(AdminButtons.ALL_USERS, getAllUsers);
 feature.hears(AdminButtons.NEWS_LETTER, newsletterPanel);
 
-const router = ({ session }: Context) => session.scene as SceneType;
+const router = ({ session }: Context) => session.external.scene as SceneType;
 
 
 const routeHandlers = {

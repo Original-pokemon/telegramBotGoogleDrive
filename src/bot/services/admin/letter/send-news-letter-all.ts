@@ -4,7 +4,7 @@ import { HearsContext } from "grammy";
 export async function sendNewsletterForAll(ctx: Context) {
   ctx.logger.trace("Newsletter sending process started");
 
-  ctx.session.scene = '';
+  ctx.session.external.scene = '';
   ctx.logger.debug("Session scene cleared");
 
   if (!ctx.msg?.text) {
@@ -27,7 +27,7 @@ export async function sendNewsletterForAll(ctx: Context) {
       }
     });
 
-    await Promise.all(promises);
+    await Promise.allSettled(promises);
 
     await ctx.reply("Сообщение отправленно всем пользователям");
     ctx.logger.debug("Newsletter sent to all users successfully");

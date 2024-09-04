@@ -1,8 +1,8 @@
-import { accessUserData, promoteUserData, sendReminderData, updateUserGroupData } from "#root/bot/callback-data/index.js";
+import { accessUserData, promoteUserData, sendReminderData } from "#root/bot/callback-data/index.js";
 import { userIdData } from "#root/bot/callback-data/index.js";
 import { Context } from "#root/bot/context.js";
 import { UserGroup } from "#root/const.js";
-import { CallbackQueryContext, HearsContext, InlineKeyboard } from "grammy";
+import { InlineKeyboard } from "grammy";
 
 const userProfileTexts = {
   NO_USER_ID: 'No user ID provided',
@@ -63,7 +63,7 @@ export async function userProfile(ctx: Context) {
     throw new Error(userProfileTexts.NO_USER_ID);
   }
 
-  ctx.session.scene = '';
+  ctx.session.external.scene = '';
   ctx.logger.debug("Session scene cleared");
 
   try {

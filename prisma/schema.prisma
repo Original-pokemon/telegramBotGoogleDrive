@@ -13,6 +13,13 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Session {
+  key   String @id
+  value String
+
+  @@map("sessions")
+}
+
 model Group {
   id       String        @id
   user     User[]

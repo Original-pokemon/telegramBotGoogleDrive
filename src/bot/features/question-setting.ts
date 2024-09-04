@@ -6,13 +6,13 @@ import { EDIT_QUESTION_CONVERSATION } from '../conversations/index.js';
 
 const QUESTION_BUTTON = 'Настроить вопросы'
 const composer = new Composer<Context>();
-const feature = composer.chatType('private').filter(({ session }) => session.isAdmin);
+const feature = composer.chatType('private').filter(({ session }) => session.memory.isAdmin);
 
 feature.callbackQuery(showAllQuestions, showQuestionList);
 feature.callbackQuery(questionProfileData.filter(), questionProfile);
 feature.callbackQuery(addQuestionCallback, addQuestion);
 feature.callbackQuery(deleteQuestionData.filter(), deleteQuestion);
-feature.callbackQuery(editPanelPanelData.filter(), (ctx) => ctx.conversation.enter(EDIT_QUESTION_CONVERSATION));
+feature.callbackQuery(editPanelPanelData.filter(), async (ctx) => await ctx.conversation.enter(EDIT_QUESTION_CONVERSATION));
 
 feature.hears(QUESTION_BUTTON, questionPanel);
 

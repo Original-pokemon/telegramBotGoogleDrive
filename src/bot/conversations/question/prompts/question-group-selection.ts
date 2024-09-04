@@ -39,7 +39,7 @@ export async function promptForGroupSelection(conversation: Conversation<Context
     id: string;
   }[];
 } & Question | undefined = undefined): Promise<[string[], Context]> {
-  const { customData } = conversation.session;
+  const { customData } = conversation.session.external;
   const groups = await ctx.repositories.groups.getAllGroups();
   const selectedGroupIds: { [key: string]: boolean } = {}; //сбрасывает выбранные группы
 
@@ -58,7 +58,7 @@ export async function promptForGroupSelection(conversation: Conversation<Context
 
   await conversation.waitForCallbackQuery(callback, {
     otherwise: async (answerCtx: Context) => {
-      const { customData } = conversation.session;
+      const { customData } = conversation.session.external;
 
       if (!(typeof customData.selectedGroupIds === 'object')) {
         throw new Error('selectedGroupIds must be an object');
@@ -84,13 +84,13 @@ export async function promptForGroupSelection(conversation: Conversation<Context
     }
   });
 
-  if (!conversation.session.customData.selectedGroupIds) {
+  if (!conversation.session.external.customData.selectedGroupIds) {
     throw new Error('selectedGroupIds must be defined')
   }
 
-  const result = Object.keys(conversation.session.customData.selectedGroupIds)
+  const result = Object.keys(conversation.session.external.customData.selectedGroupIds)
 
-  delete conversation.session.customData.selectedGroupIds
+  delete conversation.session.external.customData.selectedGroupIds
 
   return [result, ctx]
 }

@@ -1,7 +1,8 @@
 import { CallbackQueryContext, InlineKeyboard } from 'grammy';
-import { UserGroup } from '#root/const.js';
 import { Context } from '#root/bot/context.js';
 import { accessUserData, updateUserGroupData } from '#root/bot/callback-data/index.js';
+import type { UserGroupType } from '#root/bot/types/user-group.js';
+import { UserGroup } from '#root/const.js';
 
 export async function manageUserAccess(context: CallbackQueryContext<Context>) {
   const { session, callbackQuery, logger, repositories } = context;
@@ -17,12 +18,12 @@ export async function manageUserAccess(context: CallbackQueryContext<Context>) {
       return await context.editMessageText('Пользователь не найден.');
     }
 
-    if (!session.isAdmin) {
+    if (!session.memory.isAdmin) {
       logger.warn('Access denied: user is not an administrator.');
       return await context.editMessageText('Вы не администратор!');
     }
 
-    if (userId === session.user.id) {
+    if (userId === session.memory.user.id) {
       logger.debug('Attempt to restrict access to oneself.');
       return await context.editMessageText('Вы не можете ограничить доступ самому себе!');
     }
@@ -47,7 +48,7 @@ export async function manageUserAccess(context: CallbackQueryContext<Context>) {
         reply_markup: markup,
       });
 
-    } else if ([UserGroup.Azs, UserGroup.AzsWithStore, UserGroup.Admin].includes(user.group_id as UserGroup)) {
+    } else if ([UserGroup.Azs, UserGroup.AzsWithStore, UserGroup.Admin, UserGroup.Gpn].includes(user.group_id as Exclude<UserGroupType, "waitConfirm">)) {
       await repositories.users.updateUser({ id: userId, name: user.name, group_id: UserGroup.WaitConfirm, user_folder: user.user_folder });
       logger.info(`Access restricted for user ID: ${userId}`);
 

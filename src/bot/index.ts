@@ -1,11 +1,8 @@
-import { Bot as TelegramBot, BotConfig, GrammyError, HttpError, session, StorageAdapter } from 'grammy';
-import pg from "pg";
-
+import { Bot as TelegramBot, BotConfig, GrammyError, HttpError, session, StorageAdapter, MemorySessionStorage } from 'grammy';
 
 import { autoRetry } from '@grammyjs/auto-retry';
 import { hydrateFiles } from '@grammyjs/files';
 import { run, sequentialize } from '@grammyjs/runner';
-import { PsqlAdapter } from '@grammyjs/storage-psql';
 import { apiThrottler } from '@grammyjs/transformer-throttler';
 import { GoogleRepositoryType } from '../google-drive/index.js'
 
@@ -17,8 +14,8 @@ import GroupRepository from './repositories/group.repository.js';
 import QuestionRepository from './repositories/question.repository.js';
 import UsersRepository from './repositories/user.repository.js';
 import { Config } from '../config.js';
-import logger, { Logger } from '#root/logger.js';
-import { Context, createContextConstructor, SessionData } from './context.js';
+import { Logger } from '#root/logger.js';
+import { Context, createContextConstructor, ExternalSessionData, MemorySessionData } from './context.js';
 import PhotoFolderRepository from './repositories/photoFolder.js';
 import { questionSettingFeature } from './features/question-setting.js';
 import { createConversationFeature } from './conversations/conversations.js';
@@ -30,7 +27,7 @@ interface Dependencies {
 }
 
 interface Options {
-  botSessionStorage?: StorageAdapter<SessionData>
+  botSessionStorage: StorageAdapter<ExternalSessionData>
   botConfig?: Omit<BotConfig<Context>, 'ContextConstructor'>
 }
 
@@ -38,17 +35,19 @@ function getSessionKey(ctx: Omit<Context, "session">) {
   return ctx.chat?.id.toString();
 }
 
-
-function createInitialSessionData(): SessionData {
+function createInitialExternalSessionData(): ExternalSessionData {
   return {
     scene: '',
-    isAdmin: false,
-    user: Object.create(null),
     customData: {},
     answers: [],
     questions: [],
   };
 }
+
+const createInitialMemorySessionData = (): MemorySessionData => ({
+  isAdmin: false,
+  user: Object.create(null),
+})
 
 export default async function createBot(token: string, dependencies: Dependencies, options: Options = {}) {
   const {
@@ -90,13 +89,25 @@ export default async function createBot(token: string, dependencies: Dependencie
 
   bot.use(
     session({
-      getSessionKey,
-      initial: createInitialSessionData,
+      type: "multi",
+      external: {
+        getSessionKey,
+        initial: createInitialExternalSessionData,
+        storage: options.botSessionStorage,
+      },
+      memory: {
+        getSessionKey,
+        initial: createInitialMemorySessionData,
+        storage: new MemorySessionStorage<MemorySessionData>()
+      },
+      conversation: {
+        getSessionKey
+      }
     })
   );
 
-  bot.use(authMiddleware());
   bot.use(conversationsFeature)
+  bot.use(authMiddleware());
 
   bot.use(startFeature)
   bot.use(adminFeature)
@@ -109,11 +120,13 @@ export default async function createBot(token: string, dependencies: Dependencie
     const { ctx, error } = botError;
     logger.error(`Error while handling update ${ctx.update.update_id}:`);
     if (error instanceof GrammyError) {
-      logger.error('Error in request:', error.description);
+      logger.error('Error in request:' + error.description);
     } else if (error instanceof HttpError) {
-      logger.error('Could not contact Telegram:', error);
+      logger.error('Could not contact Telegram:' + error);
     } else {
-      logger.error('Unknown error:', error);
+      if (error instanceof Error) {
+        logger.error('Unknown error:' + error.stack);
+      }
     }
   });
 
@@ -121,7 +134,7 @@ export default async function createBot(token: string, dependencies: Dependencie
 
   logger.info('Bot :>> Started');
 
-  const stopRunner = () => {
+  const stopRunner = async () => {
     logger.info('Bot :>> Stoping...');
     return runner.isRunning() && runner.stop();
   };

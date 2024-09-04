@@ -15,7 +15,7 @@ export async function deleteQuestion(ctx: CallbackQueryContext<Context>) {
 
     logger.info(`Question with ID: ${questionId} successfully deleted`);
 
-    delete ctx.session.customData.question;
+    delete ctx.session.external.customData.question;
   } catch (error) {
     if (error instanceof Error) {
       logger.error(`Error in deleteQuestion function: ${error.message}`);

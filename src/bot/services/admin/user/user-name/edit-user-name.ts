@@ -6,7 +6,7 @@ import { Context } from "#root/bot/context.js";
 
 export async function editUserName(ctx: Context) {
   const { session, repositories, logger } = ctx;
-  const { userId } = session.customData;
+  const { userId } = session.external.customData;
   const newName = ctx.msg?.text;
 
   if (!userId) {
@@ -50,8 +50,8 @@ export async function editUserName(ctx: Context) {
       ]),
     });
 
-    session.scene = '';
-    delete session.customData.userId;
+    session.external.scene = '';
+    delete session.external.customData.userId;
   } catch (error: unknown) {
     if (error instanceof Error) {
       logger.error(`Error in admin.service > editUserName: ${error.message}`);
