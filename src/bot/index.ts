@@ -19,6 +19,7 @@ import { Context, createContextConstructor, ExternalSessionData, MemorySessionDa
 import PhotoFolderRepository from './repositories/photoFolder.js';
 import { questionSettingFeature } from './features/question-setting.js';
 import { createConversationFeature } from './conversations/conversations.js';
+import { userFeature } from './features/user.js';
 
 interface Dependencies {
   config: Config
@@ -82,6 +83,7 @@ export default async function createBot(token: string, dependencies: Dependencie
       retryOnInternalServerErrors: true,
     })
   );
+
   const scheduleFeature = createScheduleFeature(bot);
   const conversationsFeature = createConversationFeature(repositories)
 
@@ -113,6 +115,7 @@ export default async function createBot(token: string, dependencies: Dependencie
   bot.use(adminFeature)
   bot.use(scheduleFeature)
   bot.use(questionSettingFeature)
+  bot.use(userFeature)
 
   bot.api.setMyCommands([{ command: 'start', description: 'Start the bot' }]);
 

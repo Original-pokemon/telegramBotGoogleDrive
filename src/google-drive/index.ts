@@ -111,7 +111,7 @@ class GoogleRepository {
         responseType: 'stream',
       });
 
-      const mimeType = headers['Content-Type'];
+      const mimeType = headers['content-type'];
 
       if (!mimeType) {
         throw new Error('No Content-Type header found.');
@@ -130,7 +130,6 @@ class GoogleRepository {
         name: fileName,
         parents: [parentIdentifiers],
       };
-
 
       const { data } = await this.drive.files.create({
         requestBody: fileMetadata,

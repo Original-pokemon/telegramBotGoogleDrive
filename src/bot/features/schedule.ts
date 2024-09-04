@@ -1,7 +1,7 @@
 import { Bot, Composer } from 'grammy';
 import { SCHEDULE_TIME } from '../const.js';
 import { Context } from '../context.js';
-import { sendRemindersToAll, sendReminderToOne } from '../services/schedule.js';
+import { postponeReminder, sendRemindersToAll } from '../services/schedule.js';
 import schedule from 'node-schedule';
 import UsersRepository from '../repositories/user.repository.js';
 import { postponeCheckCallback } from '../callback-data/index.js';
@@ -18,7 +18,7 @@ export function createScheduleFeature(bot: Bot<Context>) {
     }, interval);
   });
 
-  composer.callbackQuery(postponeCheckCallback, sendReminderToOne);
+  composer.callbackQuery(postponeCheckCallback, postponeReminder);
 
   return composer;
 }
