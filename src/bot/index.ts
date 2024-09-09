@@ -31,6 +31,7 @@ import PhotoFolderRepository from "./repositories/photoFolder.js";
 import { questionSettingFeature } from "./features/question-setting.js";
 import { createConversationFeature } from "./conversations/conversations.js";
 import { userFeature } from "./features/user.js";
+import { unhandledFeature } from "./features/unhandled.js";
 import { errorHandler } from "./services/error.js";
 
 interface Dependencies {
@@ -132,5 +133,6 @@ export default async function createBot(
   protectedBot.use(questionSettingFeature);
   protectedBot.use(userFeature);
 
+  protectedBot.use(unhandledFeature);
 
 }
