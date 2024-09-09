@@ -135,4 +135,5 @@ export default async function createBot(
 
   protectedBot.use(unhandledFeature);
 
+  return bot;
 }
