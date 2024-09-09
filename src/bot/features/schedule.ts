@@ -5,6 +5,7 @@ import { postponeReminder, sendRemindersToAll } from '../services/schedule.js';
 import schedule from 'node-schedule';
 import UsersRepository from '../repositories/user.repository.js';
 import { postponeCheckCallback } from '../callback-data/index.js';
+import { logHandle } from '../helpers/logging.js';
 
 export function createScheduleFeature(bot: Bot<Context>) {
   const composer = new Composer<Context>();
@@ -18,7 +19,7 @@ export function createScheduleFeature(bot: Bot<Context>) {
     }, interval);
   });
 
-  composer.callbackQuery(postponeCheckCallback, postponeReminder);
+  composer.callbackQuery(postponeCheckCallback, logHandle('callback-query-postpone-reminder'), postponeReminder);
 
   return composer;
 }
