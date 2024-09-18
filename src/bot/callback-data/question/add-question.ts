@@ -1,1 +1,1 @@
-export const addQuestionCallback = 'add_question';
+export const addQuestionCallback = "add_question";

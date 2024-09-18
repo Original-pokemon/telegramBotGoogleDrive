@@ -1,1 +1,1 @@
-export const postponeCheckCallback = 'postponeCheck';
+export const postponeCheckCallback = "postponeCheck";

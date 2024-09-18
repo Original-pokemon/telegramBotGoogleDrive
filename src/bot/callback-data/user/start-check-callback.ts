@@ -1,1 +1,1 @@
-export const startCheckCallback = 'startCheck'
+export const startCheckCallback = "startCheck";

@@ -1,1 +1,1 @@
-export const showAllQuestions = 'show_all_questions';
+export const showAllQuestions = "show_all_questions";

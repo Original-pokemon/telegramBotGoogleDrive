@@ -1,1 +1,1 @@
-export const skipPhotoCallback = 'skip_photo'
+export const skipPhotoCallback = "skip_photo";

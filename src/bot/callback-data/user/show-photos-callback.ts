@@ -1,1 +1,1 @@
-export const showPhotosCallback = 'show_photos'
+export const showPhotosCallback = "show_photos";

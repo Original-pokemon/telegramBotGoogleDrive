@@ -1,1 +1,1 @@
-export const sendPhotosCallback = 'sendPhotos'
+export const sendPhotosCallback = "sendPhotos";
