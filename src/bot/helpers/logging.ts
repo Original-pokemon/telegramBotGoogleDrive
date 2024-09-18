@@ -23,10 +23,10 @@ export function logHandle(id: string): Middleware<Context> {
         ...(id.startsWith("unhandled")
           ? { update: getUpdateInfo(ctx) }
           : {
-            user_id: user?.id,
-            user: user.name,
-            duration: endTime - startTime,
-          }),
+              user_id: user?.id,
+              user: user.name,
+              duration: endTime - startTime,
+            }),
       });
     }
   };
