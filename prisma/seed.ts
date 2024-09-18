@@ -1,5 +1,5 @@
 import { PrismaClient } from "@prisma/client";
-import { UserGroup } from '../src/const.js';
+import { UserGroup } from "../src/const.js";
 
 const prisma = new PrismaClient();
 
@@ -26,10 +26,10 @@ const upsertGroups = async () => {
 };
 
 try {
-  await prisma.$connect()
+  await prisma.$connect();
   await upsertGroups();
   await prisma.$disconnect();
-} catch (error) {
+} catch {
   await prisma.$disconnect();
   throw new Error("A mistake in the base of the seed ");
 }
