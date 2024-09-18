@@ -1,26 +1,33 @@
+/* eslint-disable no-restricted-syntax */
 import { selectGroupId } from "#root/bot/callback-data/index.js";
 import { Context } from "#root/bot/context.js";
 import { UserGroup } from "#root/const.js";
 import { Conversation } from "@grammyjs/conversations";
-import { Question } from "@prisma/client";
+import { Group, Question } from "@prisma/client";
 import { InlineKeyboard } from "grammy";
 
-async function updateGroupSelectionKeyboard(ctx: Context, groups: any[], selectedGroupIds: { [key: string]: boolean }) {
-  const callback = 'save_group_selection';
+async function updateGroupSelectionKeyboard(
+  ctx: Context,
+  groups: Group[],
+  selectedGroupIds: { [key: string]: boolean },
+) {
+  const callback = "save_group_selection";
 
   let selectedGroupsCounter = 0;
 
-  const groupsLayout: [{ text: string, callback_data: string }][] = groups.map(({ id }) => {
+  const groupsLayout: [{ text: string; callback_data: string }][] = [];
+
+  for (const { id } of groups) {
     if (id !== UserGroup.Admin && id !== UserGroup.WaitConfirm) {
       const isSelected = selectedGroupIds[id];
       selectedGroupsCounter += isSelected ? 1 : 0;
       const buttonText = isSelected ? `${id}✅` : `${id}⛔`;
 
-      return [
+      groupsLayout.push([
         { text: buttonText, callback_data: selectGroupId.pack({ id }) },
-      ];
+      ]);
     }
-  }).filter(Boolean) as [{ text: string, callback_data: string }][]; // фильтруем undefined
+  }
 
   if (selectedGroupsCounter > 0) {
     groupsLayout.push([{ text: "Сохранить", callback_data: callback }]);
@@ -29,46 +36,46 @@ async function updateGroupSelectionKeyboard(ctx: Context, groups: any[], selecte
   const markup = InlineKeyboard.from(groupsLayout);
 
   await ctx.editMessageText(
-    'Выберите типы АЗС, которые будут получать уведомление:',
-    { reply_markup: markup }
+    "Выберите типы АЗС, которые будут получать уведомление:",
+    { reply_markup: markup },
   );
 }
 
-export async function promptForGroupSelection(conversation: Conversation<Context>, ctx: Context, question: {
-  group: {
-    id: string;
-  }[];
-} & Question | undefined = undefined): Promise<[string[], Context]> {
+export async function promptForGroupSelection(
+  conversation: Conversation<Context>,
+  ctx: Context,
+  question?: { group: Group[] } & Question,
+): Promise<[string[], Context]> {
   const { customData } = conversation.session.external;
   const groups = await ctx.repositories.groups.getAllGroups();
-  const selectedGroupIds: { [key: string]: boolean } = {}; //сбрасывает выбранные группы
 
-  if (question) {
-    question.group.forEach(({ id }) => selectedGroupIds[id] = true)
-  }
+  customData.selectedGroupIds = question
+    ? Object.fromEntries(question.group.map((g) => [[g.id], true]))
+    : {};
 
-  if (!(typeof customData.selectedGroupIds === 'object')) {
-    customData.selectedGroupIds = selectedGroupIds;
-  }
+  const callback = "save_group_selection";
 
-
-  const callback = 'save_group_selection';
-
-  await updateGroupSelectionKeyboard(ctx, groups, customData.selectedGroupIds as { [key: string]: boolean });
+  await updateGroupSelectionKeyboard(
+    ctx,
+    groups,
+    customData.selectedGroupIds as { [key: string]: boolean },
+  );
 
   await conversation.waitForCallbackQuery(callback, {
     otherwise: async (answerCtx: Context) => {
-      const { customData } = conversation.session.external;
+      const { customData: answerCustomData } = conversation.session.external;
 
-      if (!(typeof customData.selectedGroupIds === 'object')) {
-        throw new Error('selectedGroupIds must be an object');
+      if (!answerCustomData.selectedGroupIds) {
+        throw new Error("selectedGroupIds must be defined");
       }
 
-      if (!customData.selectedGroupIds) {
-        throw new Error('selectedGroupIds must be defined');
+      if (!(typeof answerCustomData.selectedGroupIds === "object")) {
+        throw new TypeError("selectedGroupIds must be an object");
       }
 
-      const selectedGroupIds = customData.selectedGroupIds as { [key: string]: boolean };
+      const { selectedGroupIds } = answerCustomData as {
+        selectedGroupIds: { [key: string]: boolean };
+      };
 
       if (answerCtx.hasCallbackQuery(selectGroupId.filter())) {
         const { id } = selectGroupId.unpack(answerCtx.callbackQuery.data);
@@ -81,16 +88,19 @@ export async function promptForGroupSelection(conversation: Conversation<Context
 
         await updateGroupSelectionKeyboard(answerCtx, groups, selectedGroupIds);
       }
-    }
+    },
+    drop: true,
   });
 
   if (!conversation.session.external.customData.selectedGroupIds) {
-    throw new Error('selectedGroupIds must be defined')
+    throw new Error("selectedGroupIds must be defined");
   }
 
-  const result = Object.keys(conversation.session.external.customData.selectedGroupIds)
+  const result = Object.keys(
+    conversation.session.external.customData.selectedGroupIds,
+  );
 
-  delete conversation.session.external.customData.selectedGroupIds
+  delete customData.selectedGroupIds;
 
-  return [result, ctx]
+  return [result, ctx];
 }
