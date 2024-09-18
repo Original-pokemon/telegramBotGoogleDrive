@@ -27,7 +27,7 @@ import {
   ExternalSessionData,
   MemorySessionData,
 } from "./context.js";
-import PhotoFolderRepository from "./repositories/photoFolder.js";
+import PhotoFolderRepository from "./repositories/photo-folder.repository.js";
 import { questionSettingFeature } from "./features/question-setting.js";
 import { createConversationFeature } from "./conversations/conversations.js";
 import { userFeature } from "./features/user.js";

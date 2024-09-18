@@ -7,24 +7,27 @@ export async function handleCallbackQuery(ctx: Context) {
 
   try {
     if (!answers) {
-      throw new Error('Answers not found');
+      throw new Error("Answers not found");
     }
 
     if (!questions) {
-      throw new Error('Questions not found');
+      throw new Error("Questions not found");
     }
 
     await ctx.deleteMessage();
     answers.push(undefined);
 
     // Log the current state before proceeding
-    logger.debug(`Callback query processed: ${answers.length} of ${questions.length} answered.`);
+    logger.debug(
+      `Callback query processed: ${answers.length} of ${questions.length} answered.`,
+    );
 
     // Send next question or end message
     await sendNextMessage(ctx, answers.length, questions.length);
-
   } catch (error) {
-    logger.error(`Error in handleCallbackQuery: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    logger.error(
+      `Error in handleCallbackQuery: ${error instanceof Error ? error.message : "Unknown error"}`,
+    );
     // Optionally, you can add error handling logic here
   }
 }

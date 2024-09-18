@@ -10,7 +10,6 @@
     "sourceMap": true, // Включает генерацию карты исходного кода
     "outDir": "dist", // Директория для скомпилированных файлов
     "rootDir": ".", // Исходная директория файлов TypeScript
-    "allowJs": true,
     "paths": {
       "#root/*": [
         "./src/*"
@@ -18,7 +17,8 @@
     }
   },
   "include": [
-    "src/**/*"
+    "src/**/*",
+    "prisma/**/*",
   ],
   "exclude": [
     "node_modules",

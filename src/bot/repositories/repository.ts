@@ -1,4 +1,4 @@
-import dataBase from "#root/prisma/index.js"
+import dataBase from "#root/prisma/index.js";
 
 export default class Repository {
   protected readonly client;

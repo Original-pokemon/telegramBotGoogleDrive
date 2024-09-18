@@ -1,4 +1,7 @@
-import { editPhotoCallbackData, sendPhotosCallback } from "#root/bot/callback-data/index.js";
+import {
+  editPhotoCallbackData,
+  sendPhotosCallback,
+} from "#root/bot/callback-data/index.js";
 import { Context } from "#root/bot/context.js";
 import { InlineKeyboard } from "grammy";
 
@@ -6,7 +9,7 @@ export async function showPhotos(ctx: Context) {
   const { answers } = ctx.session.external;
 
   if (!answers) {
-    const errorMessage = 'Answers not found';
+    const errorMessage = "Answers not found";
     ctx.logger.error(`user.service > showPhotos: ${errorMessage}`);
     throw new Error(errorMessage);
   }
@@ -22,18 +25,18 @@ export async function showPhotos(ctx: Context) {
         return ctx.replyWithPhoto(photo.id, {
           caption: photo.fileName,
           reply_markup: new InlineKeyboard().text(
-            'Изменить',
-            editPhotoCallbackData.pack({ answersIndex: index })
+            "Изменить",
+            editPhotoCallbackData.pack({ answersIndex: index }),
           ),
         });
       }
-      return false
+      return false;
     });
 
     await Promise.allSettled(promises);
 
-    await ctx.reply('Отправить проверяющему все как есть', {
-      reply_markup: new InlineKeyboard().text('Отправить', sendPhotosCallback),
+    await ctx.reply("Отправить проверяющему все как есть", {
+      reply_markup: new InlineKeyboard().text("Отправить", sendPhotosCallback),
     });
 
     await ctx.deleteMessage();
@@ -43,8 +46,8 @@ export async function showPhotos(ctx: Context) {
     if (error instanceof Error) {
       ctx.logger.error(`user.service > showPhotos: ${error.message}`);
     } else {
-      ctx.logger.error('user.service > showPhotos: Unknown error occurred');
+      ctx.logger.error("user.service > showPhotos: Unknown error occurred");
     }
     return false;
   }
-};
+}

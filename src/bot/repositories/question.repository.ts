@@ -1,7 +1,6 @@
-import Repository from "./repository.js";
 import logger from "#root/logger.js";
 import { Question } from "@prisma/client";
-
+import Repository from "./repository.js";
 
 export default class QuestionRepository extends Repository {
   async getQuestion(id: number) {
@@ -22,14 +21,18 @@ export default class QuestionRepository extends Repository {
     } catch (error: unknown) {
       if (error instanceof Error) {
         logger.error(`Error finding question with id ${id}: ${error.message}`);
-        throw new Error(`Error finding question with id ${id}: \n${error.message}`);
+        throw new Error(
+          `Error finding question with id ${id}: \n${error.message}`,
+        );
       }
       throw error;
     }
   }
 
   async getQuestions(azsType: string): Promise<Question[]> {
-    logger.trace(`Attempting to retrieve all questions for AZS type: ${azsType}`);
+    logger.trace(
+      `Attempting to retrieve all questions for AZS type: ${azsType}`,
+    );
     try {
       const questions = await this.client.question.findMany({
         where: {
@@ -43,12 +46,18 @@ export default class QuestionRepository extends Repository {
           group: true, // Включаем связанные группы
         },
       });
-      logger.debug(`Successfully retrieved ${questions.length} questions for AZS type: ${azsType}`);
+      logger.debug(
+        `Successfully retrieved ${questions.length} questions for AZS type: ${azsType}`,
+      );
       return questions;
     } catch (error: unknown) {
       if (error instanceof Error) {
-        logger.error(`Error retrieving questions for AZS type ${azsType}: ${error.message}`);
-        throw new Error(`Error retrieving questions for AZS type ${azsType}: \n${error.message}`);
+        logger.error(
+          `Error retrieving questions for AZS type ${azsType}: ${error.message}`,
+        );
+        throw new Error(
+          `Error retrieving questions for AZS type ${azsType}: \n${error.message}`,
+        );
       }
       throw error;
     }
@@ -83,22 +92,29 @@ export default class QuestionRepository extends Repository {
     } catch (error: unknown) {
       if (error instanceof Error) {
         logger.error(`Error deleting question with id ${id}: ${error.message}`);
-        throw new Error(`Error deleting question with id ${id}: \n${error.message}`);
+        throw new Error(
+          `Error deleting question with id ${id}: \n${error.message}`,
+        );
       }
       throw error;
     }
   }
 
-  async addQuestion({ name, require, text, groupIds }: Omit<Question, 'id'> & { groupIds: string[] }): Promise<Question> {
+  async addQuestion({
+    name,
+    require,
+    text,
+    groupIds,
+  }: Omit<Question, "id"> & { groupIds: string[] }): Promise<Question> {
     logger.trace(`Attempting to add question with name: ${name}`);
     try {
       const newQuestion = await this.client.question.create({
         data: {
-          name: name,
-          text: text,
-          require: require,
+          name,
+          text,
+          require,
           group: {
-            connect: groupIds.map(id => ({ id })), // Связываем вопрос с группами
+            connect: groupIds.map((id) => ({ id })), // Связываем вопрос с группами
           },
         },
       });
@@ -106,24 +122,34 @@ export default class QuestionRepository extends Repository {
       return newQuestion;
     } catch (error: unknown) {
       if (error instanceof Error) {
-        logger.error(`Error adding question with name ${name}: ${error.message}`);
-        throw new Error(`Error adding question with name ${name}: \n${error.message}`);
+        logger.error(
+          `Error adding question with name ${name}: ${error.message}`,
+        );
+        throw new Error(
+          `Error adding question with name ${name}: \n${error.message}`,
+        );
       }
       throw error;
     }
   }
 
-  async updateQuestion({ id, name, require, text, groupIds }: Question & { groupIds: string[] }): Promise<Question> {
+  async updateQuestion({
+    id,
+    name,
+    require,
+    text,
+    groupIds,
+  }: Question & { groupIds: string[] }): Promise<Question> {
     logger.trace(`Attempting to update question with id: ${id}`);
     try {
       const updatedQuestion = await this.client.question.update({
         where: { id },
         data: {
-          name: name,
-          text: text,
-          require: require,
+          name,
+          text,
+          require,
           group: {
-            set: groupIds.map(id => ({ id })),
+            set: groupIds.map((groupId) => ({ id: groupId })),
           },
         },
       });
@@ -132,7 +158,9 @@ export default class QuestionRepository extends Repository {
     } catch (error: unknown) {
       if (error instanceof Error) {
         logger.error(`Error updating question with id ${id}: ${error.message}`);
-        throw new Error(`Error updating question with id ${id}: \n${error.message}`);
+        throw new Error(
+          `Error updating question with id ${id}: \n${error.message}`,
+        );
       }
       throw error;
     }

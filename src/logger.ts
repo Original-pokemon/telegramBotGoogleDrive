@@ -38,6 +38,6 @@ const createLogger = async () => {
 
 const logger = await createLogger();
 
-export default logger
+export default logger;
 
 export type Logger = typeof logger;

@@ -1,15 +1,15 @@
 import { Options } from "#root/bot/const.js";
 import { Context } from "#root/bot/context.js";
-import retry from 'async-retry';
+import retry from "async-retry";
 
 export const handleFile = async (ctx: Context) => {
-  ctx.logger.trace('Starting file handling process.');
+  ctx.logger.trace("Starting file handling process.");
 
   try {
     const file = await retry(async () => {
-      ctx.logger.debug('Attempting to retrieve file.');
+      ctx.logger.debug("Attempting to retrieve file.");
       const result = await ctx.getFile();
-      ctx.logger.debug('File retrieved successfully.');
+      ctx.logger.debug("File retrieved successfully.");
       return result;
     }, Options);
 
@@ -18,15 +18,15 @@ export const handleFile = async (ctx: Context) => {
       throw new Error(`File not found: ${ctx}`);
     }
 
-    ctx.logger.debug('File handling completed successfully.');
+    ctx.logger.debug("File handling completed successfully.");
     return file;
   } catch (error) {
     if (error instanceof Error) {
       ctx.logger.error(`Error while handling file: ${error.message}`);
       throw error;
     } else {
-      ctx.logger.error('Unknown error occurred while handling file');
-      throw new Error('An unknown error occurred');
+      ctx.logger.error("Unknown error occurred while handling file");
+      throw new Error("An unknown error occurred");
     }
   }
 };

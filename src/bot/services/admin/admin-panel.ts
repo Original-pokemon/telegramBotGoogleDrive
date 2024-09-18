@@ -26,6 +26,8 @@ export async function adminPanel(ctx: Context) {
 
     ctx.logger.debug("Admin panel message sent successfully");
   } catch (error) {
-    ctx.logger.error(`Error in admin.service > adminPanel: ${error instanceof Error ? error.message : error}`);
+    ctx.logger.error(
+      `Error in admin.service > adminPanel: ${error instanceof Error ? error.message : error}`,
+    );
   }
-};
+}

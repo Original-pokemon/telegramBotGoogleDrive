@@ -3,25 +3,26 @@ import { Context } from "#root/bot/context.js";
 import { CallbackQueryContext } from "grammy";
 
 export async function editPhotoPanel(ctx: CallbackQueryContext<Context>) {
-  const { logger, session } = ctx;
+  const { logger, session, callbackQuery } = ctx;
+  const { customData, scene } = session.external;
 
   try {
     await ctx.deleteMessage();
 
-    if (session.external.scene !== 'end_msg') {
-      logger.warn('Attempted to edit photo outside of end message scene.');
+    if (scene !== "end_msg") {
+      logger.warn("Attempted to edit photo outside of end message scene.");
       return;
     }
 
     const { answers } = session.external;
 
     if (!answers || answers.length === 0) {
-      const errorMessage = 'Answers not found or empty';
+      const errorMessage = "Answers not found or empty";
       logger.error(`user.service > editPhotoPanel: ${errorMessage}`);
       throw new Error(errorMessage);
     }
 
-    const { answersIndex } = editPhotoCallbackData.unpack(ctx.callbackQuery.data)
+    const { answersIndex } = editPhotoCallbackData.unpack(callbackQuery.data);
     const photo = answers[answersIndex];
 
     if (!photo) {
@@ -30,8 +31,8 @@ export async function editPhotoPanel(ctx: CallbackQueryContext<Context>) {
       throw new Error(errorMessage);
     }
 
-    session.external.scene = 'edit_photo';
-    session.external.customData.answersIndex = answersIndex;
+    session.external.scene = "edit_photo";
+    customData.answersIndex = answersIndex;
 
     await ctx.reply(`Отправьте новое фото: ${photo.fileName}`);
     logger.info(`Prompted user to send a new photo for ${photo.fileName}`);
@@ -39,7 +40,7 @@ export async function editPhotoPanel(ctx: CallbackQueryContext<Context>) {
     if (error instanceof Error) {
       logger.error(`user.service > editPhotoPanel: ${error.message}`);
     } else {
-      logger.error('user.service > editPhotoPanel: Unknown error occurred');
+      logger.error("user.service > editPhotoPanel: Unknown error occurred");
     }
   }
-};
+}

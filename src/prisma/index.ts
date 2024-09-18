@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import logger from "#root/logger.js";
 import { Prisma, PrismaClient } from "@prisma/client";
 
@@ -9,62 +10,63 @@ export interface IDataBase {
 
 class DataBase implements IDataBase {
   private database?: PrismaClient;
+
   private prisma;
 
   constructor() {
     const prisma = new PrismaClient({
       log: [
         {
-          emit: 'event',
-          level: 'query',
+          emit: "event",
+          level: "query",
         },
         {
-          emit: 'event',
-          level: 'error',
+          emit: "event",
+          level: "error",
         },
         {
-          emit: 'event',
-          level: 'info',
+          emit: "event",
+          level: "info",
         },
         {
-          emit: 'event',
-          level: 'warn',
+          emit: "event",
+          level: "warn",
         },
       ],
-    })
+    });
 
-    prisma.$on('query', (event: Prisma.QueryEvent) => {
+    prisma.$on("query", (event: Prisma.QueryEvent) => {
       logger.trace({
-        msg: 'database query',
+        msg: "database query",
         query: event.query,
         params: event.params,
         duration: event.duration,
-      })
-    })
+      });
+    });
 
-    prisma.$on('error', (event: Prisma.LogEvent) => {
+    prisma.$on("error", (event: Prisma.LogEvent) => {
       logger.error({
-        msg: 'database error',
+        msg: "database error",
         target: event.target,
         message: event.message,
-      })
-    })
+      });
+    });
 
-    prisma.$on('info', (event: Prisma.LogEvent) => {
+    prisma.$on("info", (event: Prisma.LogEvent) => {
       logger.info({
-        msg: 'database info',
+        msg: "database info",
         target: event.target,
         message: event.message,
-      })
-    })
+      });
+    });
 
-    prisma.$on('warn', (event: Prisma.LogEvent) => {
+    prisma.$on("warn", (event: Prisma.LogEvent) => {
       logger.warn({
-        msg: 'database warning',
+        msg: "database warning",
         target: event.target,
         message: event.message,
-      })
-    })
+      });
+    });
 
     prisma.$extends({
       name: "findManyAndCount",
@@ -90,7 +92,7 @@ class DataBase implements IDataBase {
     if (this.database) {
       return this.database;
     }
-    throw new Error('Database not initialized');
+    throw new Error("Database not initialized");
   }
 
   async init() {
@@ -119,7 +121,7 @@ class DataBase implements IDataBase {
         throw new Error("Error disconnecting client");
       }
     }
-    logger.warn('Database not initialized');
+    logger.warn("Database not initialized");
     return false;
   }
 }

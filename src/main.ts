@@ -62,5 +62,5 @@ try {
   }
 } catch (error) {
   logger.error(error);
-  process.exit(1);
+  throw new Error("Error initializing bot");
 }

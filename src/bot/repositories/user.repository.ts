@@ -1,7 +1,7 @@
 import { User } from "@prisma/client";
+import logger from "#root/logger.js";
 import Repository from "./repository.js";
 import { UserGroup } from "../../const.js";
-import logger from "#root/logger.js";
 
 export default class UsersRepository extends Repository {
   async getUser(id: string): Promise<User | null> {
@@ -48,7 +48,7 @@ export default class UsersRepository extends Repository {
         where: {
           group_id: {
             notIn: [UserGroup.Admin, UserGroup.WaitConfirm],
-          }
+          },
         },
       });
 
@@ -74,21 +74,30 @@ export default class UsersRepository extends Repository {
     } catch (error: unknown) {
       if (error instanceof Error) {
         logger.error(`Error deleting user with id ${id}: ${error.message}`);
-        throw new Error(`Error deleting user with id ${id}: \n${error.message}`);
+        throw new Error(
+          `Error deleting user with id ${id}: \n${error.message}`,
+        );
       }
       throw error;
     }
   }
 
-  async addUser({ id, group_id, name, user_folder }: Omit<User, "created_date">): Promise<User> {
-    logger.trace(`Attempting to add user with id: ${id}, name: ${name}, group: ${group_id}`);
+  async addUser({
+    id,
+    group_id,
+    name,
+    user_folder,
+  }: Omit<User, "created_date">): Promise<User> {
+    logger.trace(
+      `Attempting to add user with id: ${id}, name: ${name}, group: ${group_id}`,
+    );
     try {
       const newUser = await this.client.user.create({
         data: {
           id,
           name,
           group_id,
-          user_folder
+          user_folder,
         },
       });
       logger.debug(`Successfully added user with id: ${id}`);
@@ -102,7 +111,12 @@ export default class UsersRepository extends Repository {
     }
   }
 
-  async updateUser({ id, group_id, name, user_folder }: Omit<User, "created_date">): Promise<User> {
+  async updateUser({
+    id,
+    group_id,
+    name,
+    user_folder,
+  }: Omit<User, "created_date">): Promise<User> {
     logger.trace(`Attempting to update user with id: ${id}`);
     try {
       const updatedUser = await this.client.user.update({
@@ -118,7 +132,9 @@ export default class UsersRepository extends Repository {
     } catch (error: unknown) {
       if (error instanceof Error) {
         logger.error(`Error updating user with id ${id}: ${error.message}`);
-        throw new Error(`Error updating user with id ${id}: \n${error.message}`);
+        throw new Error(
+          `Error updating user with id ${id}: \n${error.message}`,
+        );
       }
       throw error;
     }

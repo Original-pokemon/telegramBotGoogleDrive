@@ -1,6 +1,6 @@
 import { PhotoFolder } from "@prisma/client";
-import Repository from "./repository.js";
 import logger from "#root/logger.js";
+import Repository from "./repository.js";
 
 export default class PhotoFolderRepository extends Repository {
   async getAllFolders(): Promise<PhotoFolder[]> {
@@ -32,15 +32,24 @@ export default class PhotoFolderRepository extends Repository {
       return folder;
     } catch (error: unknown) {
       if (error instanceof Error) {
-        logger.error(`Error retrieving folder with id ${folderId}: ${error.message}`);
-        throw new Error(`Error retrieving folder with id ${folderId}: \n${error.message}`);
+        logger.error(
+          `Error retrieving folder with id ${folderId}: ${error.message}`,
+        );
+        throw new Error(
+          `Error retrieving folder with id ${folderId}: \n${error.message}`,
+        );
       }
       throw error;
     }
   }
 
-  async getUserFolderByDate(userId: string, date: Date): Promise<string | null> {
-    logger.trace(`Attempting to retrieve folder for user id: ${userId} on date: ${date.toISOString()}`);
+  async getUserFolderByDate(
+    userId: string,
+    date: Date,
+  ): Promise<string | undefined> {
+    logger.trace(
+      `Attempting to retrieve folder for user id: ${userId} on date: ${date.toISOString()}`,
+    );
     try {
       const folder = await this.client.photoFolder.findFirst({
         where: {
@@ -52,23 +61,36 @@ export default class PhotoFolderRepository extends Repository {
         },
       });
       if (folder) {
-        logger.debug(`Successfully retrieved folder for user id: ${userId} on date: ${date.toISOString()}`);
+        logger.debug(
+          `Successfully retrieved folder for user id: ${userId} on date: ${date.toISOString()}`,
+        );
         return folder.folder_id;
-      } else {
-        logger.debug(`No folder found for user id: ${userId} on date: ${date.toISOString()}`);
       }
-      return null;
+      logger.debug(
+        `No folder found for user id: ${userId} on date: ${date.toISOString()}`,
+      );
+
+      return undefined;
     } catch (error: unknown) {
       if (error instanceof Error) {
-        logger.error(`Error retrieving folder for user id ${userId} on date ${date.toISOString()}: ${error.message}`);
-        throw new Error(`Error retrieving folder for user id ${userId} on date ${date.toISOString()}: \n${error.message}`);
+        logger.error(
+          `Error retrieving folder for user id ${userId} on date ${date.toISOString()}: ${error.message}`,
+        );
+        throw new Error(
+          `Error retrieving folder for user id ${userId} on date ${date.toISOString()}: \n${error.message}`,
+        );
       }
       throw error;
     }
   }
 
-  async getFoldersBetweenDates(startDate: Date, endDate: Date): Promise<PhotoFolder[]> {
-    logger.trace(`Attempting to retrieve folders created between ${startDate.toISOString()} and ${endDate.toISOString()}`);
+  async getFoldersBetweenDates(
+    startDate: Date,
+    endDate: Date,
+  ): Promise<PhotoFolder[]> {
+    logger.trace(
+      `Attempting to retrieve folders created between ${startDate.toISOString()} and ${endDate.toISOString()}`,
+    );
     try {
       const folders = await this.client.photoFolder.findMany({
         where: {
@@ -78,12 +100,18 @@ export default class PhotoFolderRepository extends Repository {
           },
         },
       });
-      logger.debug(`Successfully retrieved ${folders.length} folders created between ${startDate.toISOString()} and ${endDate.toISOString()}`);
+      logger.debug(
+        `Successfully retrieved ${folders.length} folders created between ${startDate.toISOString()} and ${endDate.toISOString()}`,
+      );
       return folders;
     } catch (error: unknown) {
       if (error instanceof Error) {
-        logger.error(`Error retrieving folders created between ${startDate.toISOString()} and ${endDate.toISOString()}: ${error.message}`);
-        throw new Error(`Error retrieving folders created between ${startDate.toISOString()} and ${endDate.toISOString()}: \n${error.message}`);
+        logger.error(
+          `Error retrieving folders created between ${startDate.toISOString()} and ${endDate.toISOString()}: ${error.message}`,
+        );
+        throw new Error(
+          `Error retrieving folders created between ${startDate.toISOString()} and ${endDate.toISOString()}: \n${error.message}`,
+        );
       }
       throw error;
     }
@@ -98,15 +126,24 @@ export default class PhotoFolderRepository extends Repository {
       logger.debug(`Successfully deleted folder with id: ${folderId}`);
     } catch (error: unknown) {
       if (error instanceof Error) {
-        logger.error(`Error deleting folder with id ${folderId}: ${error.message}`);
-        throw new Error(`Error deleting folder with id ${folderId}: \n${error.message}`);
+        logger.error(
+          `Error deleting folder with id ${folderId}: ${error.message}`,
+        );
+        throw new Error(
+          `Error deleting folder with id ${folderId}: \n${error.message}`,
+        );
       }
       throw error;
     }
   }
 
-  async addFolder({ folder_id, user_id }: Omit<PhotoFolder, 'creation_date'>): Promise<string> {
-    logger.trace(`Attempting to add folder with id: ${folder_id} for user id: ${user_id}`);
+  async addFolder({
+    folder_id,
+    user_id,
+  }: Omit<PhotoFolder, "creation_date">): Promise<string> {
+    logger.trace(
+      `Attempting to add folder with id: ${folder_id} for user id: ${user_id}`,
+    );
     try {
       const newFolder = await this.client.photoFolder.create({
         data: {
@@ -118,8 +155,12 @@ export default class PhotoFolderRepository extends Repository {
       return newFolder.folder_id;
     } catch (error: unknown) {
       if (error instanceof Error) {
-        logger.error(`Error adding folder with id ${folder_id}: ${error.message}`);
-        throw new Error(`Error adding folder with id ${folder_id}: \n${error.message}`);
+        logger.error(
+          `Error adding folder with id ${folder_id}: ${error.message}`,
+        );
+        throw new Error(
+          `Error adding folder with id ${folder_id}: \n${error.message}`,
+        );
       }
       throw error;
     }

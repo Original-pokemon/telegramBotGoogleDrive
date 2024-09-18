@@ -15,23 +15,29 @@ export const createQuestionConversation = (repositories: RepositoryType) => {
       name: string;
       text: string;
       require: boolean;
-      groupIds: string[]
+      groupIds: string[];
     } = Object.create(null);
 
-    newQuestion.name = await promptForQuestionName(conversation, ctx)
-    newQuestion.text = await promptForQuestionText(conversation, ctx)
+    newQuestion.name = await promptForQuestionName(conversation, ctx);
+    newQuestion.text = await promptForQuestionText(conversation, ctx);
 
-    const [questionRequired, requireCtx] = await promptForQuestionRequired(conversation, ctx)
-    newQuestion.require = questionRequired
+    const [questionRequired, requireCtx] = await promptForQuestionRequired(
+      conversation,
+      ctx,
+    );
+    newQuestion.require = questionRequired;
 
-    requireCtx.repositories = repositories
+    requireCtx.repositories = repositories;
 
-    const [groupIds, groupCtx] = await promptForGroupSelection(conversation, requireCtx)
+    const [groupIds, groupCtx] = await promptForGroupSelection(
+      conversation,
+      requireCtx,
+    );
 
-    newQuestion.groupIds = groupIds
+    newQuestion.groupIds = groupIds;
 
-    await repositories.questions.addQuestion(newQuestion)
+    await repositories.questions.addQuestion(newQuestion);
 
-    await groupCtx.editMessageText('Вопрос добавлен')
-  }, CREATE_TICKET_CONVERSATION)
-}
+    await groupCtx.editMessageText("Вопрос добавлен");
+  }, CREATE_TICKET_CONVERSATION);
+};

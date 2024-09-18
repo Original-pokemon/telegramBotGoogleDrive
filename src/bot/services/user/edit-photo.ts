@@ -6,7 +6,7 @@ export async function editPhoto(ctx: Context) {
   try {
     // Проверка на команду 'startCheck'
     if (ctx.callbackQuery?.data === startCheckCallback) {
-      ctx.session.external.scene = '';
+      ctx.session.external.scene = "";
       return;
     }
 
@@ -19,16 +19,16 @@ export async function editPhoto(ctx: Context) {
     const { answers, customData } = ctx.session.external;
 
     if (!answers) {
-      throw new Error('Answers not found');
+      throw new Error("Answers not found");
     }
 
-    if (typeof customData.answersIndex !== 'number') {
-      throw new Error('Answers index not found or is not a number');
+    if (typeof customData.answersIndex !== "number") {
+      throw new TypeError("Answers index not found or is not a number");
     }
 
     const photo = answers[customData.answersIndex];
     if (!photo) {
-      throw new Error('Photo not found');
+      throw new Error("Photo not found");
     }
 
     // Получение файла
@@ -39,7 +39,7 @@ export async function editPhoto(ctx: Context) {
     photo.urlFile = file.getUrl();
 
     // Очистка customData
-    delete ctx.session.external.customData.answersIndex;
+    delete customData.answersIndex;
 
     // Отправка конечного сообщения
     await sendEndMessage(ctx);
@@ -49,7 +49,7 @@ export async function editPhoto(ctx: Context) {
     if (error instanceof Error) {
       ctx.logger.error(`user.service > editPhoto: ${error.message}`);
     } else {
-      ctx.logger.error('user.service > editPhoto: Unknown error occurred');
+      ctx.logger.error("user.service > editPhoto: Unknown error occurred");
     }
   }
-};
+}

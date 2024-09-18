@@ -1,14 +1,12 @@
-import { deleteQuestionData, editPanelPanelData, questionProfileData } from "#root/bot/callback-data/index.js";
+import { editPanelPanelData } from "#root/bot/callback-data/index.js";
 import { Context, RepositoryType } from "#root/bot/context.js";
-import { generateQuestionProfileText } from "#root/bot/helpers/index.js";
-import { CallbackQueryContext, InlineKeyboard } from "grammy";
-import { Conversation, createConversation } from "@grammyjs/conversations";
-import { Question } from "@prisma/client";
+import { InlineKeyboard } from "grammy";
+import { createConversation } from "@grammyjs/conversations";
+import { createCallbackData } from "callback-data";
 import { promptForQuestionName } from "./prompts/question-name.js";
 import { promptForQuestionText } from "./prompts/question-text.js";
 import { promptForQuestionRequired } from "./prompts/question-required.js";
 import { promptForGroupSelection } from "./prompts/question-group-selection.js";
-import { createCallbackData } from "callback-data";
 
 export const EDIT_QUESTION_CONVERSATION = "edit-question";
 
@@ -31,7 +29,7 @@ export function createEditQuestionConversation(repositories: RepositoryType) {
       name: string;
       text: string;
       require: boolean;
-      groupIds: string[]
+      groupIds: string[];
     } = {
       ...question,
       groupIds: question.group.map((g) => g.id),
@@ -41,64 +39,115 @@ export function createEditQuestionConversation(repositories: RepositoryType) {
 
     newQuestion.id = questionId;
 
-    const editQuestionCallbackData = createCallbackData('edit_question', {
+    const editQuestionCallbackData = createCallbackData("edit_question", {
       value: String,
-    })
+    });
 
     enum EditQuestionActions {
-      name = 'name',
-      text = 'text',
-      require = 'require',
-      group = 'group',
+      name = "name",
+      text = "text",
+      require = "require",
+      group = "group",
     }
 
     // Отправляем сообщение с кнопками для изменения свойств вопроса
     await ctx.editMessageText("Что вы хотите изменить?", {
       reply_markup: InlineKeyboard.from([
-        [{ text: "Изменить название", callback_data: editQuestionCallbackData.pack({ value: EditQuestionActions.name }) }],
-        [{ text: "Изменить текст", callback_data: editQuestionCallbackData.pack({ value: EditQuestionActions.text }) }],
-        [{ text: 'Добавить кнопку "Отсутсвует', callback_data: editQuestionCallbackData.pack({ value: EditQuestionActions.require }) }],
-        [{ text: "Изменить получателя", callback_data: editQuestionCallbackData.pack({ value: EditQuestionActions.group }) }],
+        [
+          {
+            text: "Изменить название",
+            callback_data: editQuestionCallbackData.pack({
+              value: EditQuestionActions.name,
+            }),
+          },
+        ],
+        [
+          {
+            text: "Изменить текст",
+            callback_data: editQuestionCallbackData.pack({
+              value: EditQuestionActions.text,
+            }),
+          },
+        ],
+        [
+          {
+            text: 'Добавить кнопку "Отсутсвует',
+            callback_data: editQuestionCallbackData.pack({
+              value: EditQuestionActions.require,
+            }),
+          },
+        ],
+        [
+          {
+            text: "Изменить получателя",
+            callback_data: editQuestionCallbackData.pack({
+              value: EditQuestionActions.group,
+            }),
+          },
+        ],
       ]),
     });
 
     // Ожидание нажатия одной из кнопок
-    const selectionCallbackContext = await conversation.waitForCallbackQuery(editQuestionCallbackData.filter());
+    const selectionCallbackContext = await conversation.waitForCallbackQuery(
+      editQuestionCallbackData.filter(),
+    );
 
-    selectionCallbackContext.repositories = repositories
+    selectionCallbackContext.repositories = repositories;
 
-    const action = editQuestionCallbackData.unpack(selectionCallbackContext.callbackQuery.data).value as EditQuestionActions
+    const action = editQuestionCallbackData.unpack(
+      selectionCallbackContext.callbackQuery.data,
+    ).value as EditQuestionActions;
 
     switch (action) {
-      case EditQuestionActions.name:
-        const newName = await promptForQuestionName(conversation, selectionCallbackContext);
+      case EditQuestionActions.name: {
+        const newName = await promptForQuestionName(
+          conversation,
+          selectionCallbackContext,
+        );
         newQuestion.name = newName;
         break;
+      }
 
-      case EditQuestionActions.text:
-        const newText = await promptForQuestionText(conversation, selectionCallbackContext);
+      case EditQuestionActions.text: {
+        const newText = await promptForQuestionText(
+          conversation,
+          selectionCallbackContext,
+        );
         newQuestion.text = newText;
         break;
+      }
 
-      case EditQuestionActions.require:
-        const [requireReply, requiredPropertyCtx] = await promptForQuestionRequired(conversation, selectionCallbackContext);
+      case EditQuestionActions.require: {
+        const [requireReply, requiredPropertyCtx] =
+          await promptForQuestionRequired(
+            conversation,
+            selectionCallbackContext,
+          );
 
-        await requiredPropertyCtx.deleteMessage()
+        await requiredPropertyCtx.deleteMessage();
 
         newQuestion.require = requireReply;
         break;
+      }
 
-      case EditQuestionActions.group:
-        const [groupIds, selectedGroupsCtx] = await promptForGroupSelection(conversation, selectionCallbackContext, question);
+      case EditQuestionActions.group: {
+        const [groupIds, selectedGroupsCtx] = await promptForGroupSelection(
+          conversation,
+          selectionCallbackContext,
+          question,
+        );
 
-        await selectedGroupsCtx.deleteMessage()
+        await selectedGroupsCtx.deleteMessage();
 
         newQuestion.groupIds = groupIds;
         break;
+      }
 
-      default:
+      default: {
         await selectionCallbackContext.reply("Неизвестное действие!");
         return;
+      }
     }
 
     // Сохранение изменений в базе данных

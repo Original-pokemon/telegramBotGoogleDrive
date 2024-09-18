@@ -1,18 +1,23 @@
 import { CallbackQueryContext, InlineKeyboard } from "grammy";
 import { Context } from "#root/bot/context.js";
-import { postponeCheckCallback, sendReminderData, startCheckCallback } from "#root/bot/callback-data/index.js";
+import {
+  postponeCheckCallback,
+  sendReminderData,
+  startCheckCallback,
+} from "#root/bot/callback-data/index.js";
 
 const REMINDER_MSG_TEXT = "Пожалуйста, подтвердите выполнение задачи.";
 
-
 function createReminderKeyboard() {
   return InlineKeyboard.from([
-    [{ text: 'Да', callback_data: startCheckCallback }],
-    [{ text: 'Нет', callback_data: postponeCheckCallback }]
+    [{ text: "Да", callback_data: startCheckCallback }],
+    [{ text: "Нет", callback_data: postponeCheckCallback }],
   ]);
 }
 
-export async function sendReminderMessageForUser(ctx: CallbackQueryContext<Context>) {
+export async function sendReminderMessageForUser(
+  ctx: CallbackQueryContext<Context>,
+) {
   const { userId } = sendReminderData.unpack(ctx.callbackQuery.data);
 
   const markup = { reply_markup: createReminderKeyboard() };
@@ -21,12 +26,16 @@ export async function sendReminderMessageForUser(ctx: CallbackQueryContext<Conte
     await ctx.api.sendMessage(userId, REMINDER_MSG_TEXT, markup);
     ctx.logger.info(`Reminder message sent to user ID: ${userId}`);
 
-    await ctx.reply('Уведомление отправленно!');
+    await ctx.reply("Уведомление отправленно!");
   } catch (error: unknown) {
     if (error instanceof Error) {
-      ctx.logger.error(`Error sending reminder to user ID ${userId}: ${error.message}`);
+      ctx.logger.error(
+        `Error sending reminder to user ID ${userId}: ${error.message}`,
+      );
     } else {
-      ctx.logger.error('An unknown error occurred while sending reminder to user.');
+      ctx.logger.error(
+        "An unknown error occurred while sending reminder to user.",
+      );
     }
   }
-};
+}
