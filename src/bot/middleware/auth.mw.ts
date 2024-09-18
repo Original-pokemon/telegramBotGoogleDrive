@@ -1,31 +1,31 @@
-import { UserGroup } from '../../const.js';
-import type { Middleware } from 'grammy';
-import { Context } from '../context.js';
-
-
+import type { Middleware } from "grammy";
+import { UserGroup } from "../../const.js";
+import { Context } from "../context.js";
 
 export default function authMiddleware(): Middleware<Context> {
   return async (ctx, next) => {
-    const { from, config, repositories: { users } } = ctx
     const {
-      first_name: firstName,
-      last_name: lastName,
-      id,
-    } = from || {};
-
-
+      from,
+      config,
+      repositories: { users },
+      logger,
+      api,
+      session,
+      update,
+    } = ctx;
+    const { first_name: firstName, last_name: lastName, id } = from || {};
 
     if (!id || !firstName) {
-      ctx.logger.warn("Authorization failed: Missing id or first name.");
+      logger.warn("Authorization failed: Missing id or first name.");
       return;
     }
 
-    const userId = id.toString()
+    const userId = id.toString();
 
     const firstPartUserName = [...firstName]
-      .filter((item) => item !== ' ')
-      .join('');
-    const secondPartUserName = lastName ? `_${lastName}` : '';
+      .filter((item) => item !== " ")
+      .join("");
+    const secondPartUserName = lastName ? `_${lastName}` : "";
     const userName = firstPartUserName + secondPartUserName;
 
     try {
@@ -38,28 +38,30 @@ export default function authMiddleware(): Middleware<Context> {
             ? UserGroup.Admin
             : UserGroup.WaitConfirm;
 
-        user = await users.addUser({ group_id: group, id: userId.toString(), name: userName, user_folder: null });
+        user = await users.addUser({
+          group_id: group,
+          id: userId.toString(),
+          name: userName,
+          // eslint-disable-next-line unicorn/no-null
+          user_folder: null,
+        });
 
-        ctx.api.sendMessage(
+        api.sendMessage(
           config.MAIN_ADMIN_ID,
-          `new User: ${JSON.stringify(user, undefined, '\t')}`
+          `new User: ${JSON.stringify(user, undefined, "\t")}`,
         );
-      } else if (ctx.update?.my_chat_member) {
+      } else if (update?.my_chat_member) {
         // If the user block bot
         await users.deleteUser(userId);
       }
 
-      ctx.session.memory.user = user;
+      session.memory.user = user;
 
-      if (user.group_id === UserGroup.Admin) {
-        ctx.session.memory.isAdmin = true
-      } else {
-        ctx.session.memory.isAdmin = false
-      };
+      session.memory.isAdmin = user.group_id === UserGroup.Admin;
 
       await next();
     } catch (error) {
-      console.error('auth.mv: \n', error);
+      logger.error("auth.mv: \n", error);
     }
   };
 }
