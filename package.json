@@ -5,6 +5,9 @@
     "node": "^12.20.0 || >=14.13.1"
   },
   "type": "module",
+  "imports": {
+    "#root/*": "./dist/src/*"
+  },
   "main": "main.js",
   "scripts": {
     "lint": "eslint .",

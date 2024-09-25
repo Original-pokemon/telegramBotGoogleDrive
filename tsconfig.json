@@ -3,6 +3,7 @@
     "target": "ES2021", // Версия JavaScript для компиляции
     "module": "NodeNext", // Система модулей
     "preserveWatchOutput": true,
+    "noEmit": true,
     "strict": true, // Включает строгую проверку типов
     "esModuleInterop": true, // Совместимость с ES6 модулями
     "skipLibCheck": true, // Пропуск проверки типов библиотек
