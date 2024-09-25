@@ -11,5 +11,5 @@ export function generateQuestionProfileText(question: {
 Название вопроса: ${name}\n
 Текст вопроса: ${text}\n
 Для каких АЗС: ${group.map((g) => g.id).join(" ")}\n
-Кнопка "Отсутствует": ${require === true ? "Есть" : "Нету"}`;
+Кнопка "Отсутствует": ${require === true ? "Нету" : "Есть"}`;
 }
