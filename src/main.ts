@@ -13,6 +13,7 @@ function onShutdown(cleanUp: () => Promise<void>) {
     isShuttingDown = true;
     await cleanUp();
   };
+
   process.on("SIGINT", handleShutdown);
   process.on("SIGTERM", handleShutdown);
 }
@@ -39,7 +40,6 @@ try {
     logger.info("shutdown");
 
     await runner?.stop();
-    await bot.stop();
   });
 
   await Promise.all([bot.init()]);
