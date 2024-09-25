@@ -9,8 +9,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider          = "postgresql"
+  url               = env("DATABASE_URL")
+  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
 }
 
 model Session {
@@ -21,15 +22,15 @@ model Session {
 }
 
 model Group {
-  id       String        @id
+  id       String     @id
   user     User[]
-  question Question[]  @relation("question_to_group")
+  question Question[] @relation("question_to_group")
 
   @@map("groups")
 }
 
 model User {
-  id           String           @id
+  id           String        @id
   group_id     String
   name         String
   created_date DateTime      @default(now())
@@ -51,10 +52,10 @@ model PhotoFolder {
 }
 
 model Question {
-  id       Int     @id @default(autoincrement())
-  name     String
-  text     String
-  require  Boolean @default(false)
+  id      Int     @id @default(autoincrement())
+  name    String
+  text    String
+  require Boolean @default(false)
 
   group Group[] @relation("question_to_group")
 
