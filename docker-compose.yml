@@ -1,0 +1,17 @@
+version: '3'
+
+services:
+  google_telegram_bot:
+    image: google_telegram_bot:latest
+    environment:
+      NODE_ENV: development
+      LOG_LEVEL: info
+      DATABASE_URL: ${DATABASE_URL}
+      SHADOW_DATABASE_URL: ${SHADOW_DATABASE_URL}
+      BOT_TOKEN: ${BOT_TOKEN}
+      MAIN_ADMIN_ID: ${MAIN_ADMIN_ID}
+      MAIN_FOLDER_ID: ${MAIN_FOLDER_ID}
+      GOOGLE_APPLICATION_CREDENTIALS: ${GOOGLE_APPLICATION_CREDENTIALS}
+    volumes:
+      - ./logs:/app/logs
+      - ${GOOGLE_APPLICATION_CREDENTIALS}:/app/credentials.json
