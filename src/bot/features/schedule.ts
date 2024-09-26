@@ -10,14 +10,17 @@ import { logHandle } from "../helpers/logging.js";
 export function createScheduleFeature(bot: Bot<Context>) {
   const composer = new Composer<Context>();
 
-  schedule.scheduleJob({ hour: 0, minute: 0 }, async () => {
-    const [hour, minute] = SCHEDULE_TIME.split(":");
-    const interval = (+hour * 60 + +minute) * 60 * 1000;
+  schedule.scheduleJob(
+    { hour: 0, minute: 0, tz: "Europe/Moscow" },
+    async () => {
+      const [hour, minute] = SCHEDULE_TIME.split(":");
+      const interval = (+hour * 60 + +minute) * 60 * 1000;
 
-    setTimeout(() => {
-      sendRemindersToAll(bot, new UsersRepository());
-    }, interval);
-  });
+      setTimeout(() => {
+        sendRemindersToAll(bot, new UsersRepository());
+      }, interval);
+    },
+  );
 
   composer.callbackQuery(
     postponeCheckCallback,
