@@ -12,7 +12,12 @@ export async function editPhoto(ctx: Context) {
 
     // Проверка на наличие фотографии в сообщении
     if (!ctx.update.message?.photo) {
-      await ctx.deleteMessage();
+      try {
+        await ctx.deleteMessage();
+      } catch (error) {
+        ctx.logger.debug("Error deleting message:", error);
+      }
+
       return;
     }
 

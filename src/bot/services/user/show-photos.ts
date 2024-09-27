@@ -16,7 +16,11 @@ export async function showPhotos(ctx: Context) {
 
   try {
     if (answers.length === 0) {
-      await ctx.deleteMessage();
+      try {
+        await ctx.deleteMessage();
+      } catch (error) {
+        ctx.logger.debug("Error deleting message:", error);
+      }
       return;
     }
 
@@ -39,7 +43,11 @@ export async function showPhotos(ctx: Context) {
       reply_markup: new InlineKeyboard().text("Отправить", sendPhotosCallback),
     });
 
-    await ctx.deleteMessage();
+    try {
+      await ctx.deleteMessage();
+    } catch (error) {
+      ctx.logger.debug("Error deleting message:", error);
+    }
 
     return true;
   } catch (error) {

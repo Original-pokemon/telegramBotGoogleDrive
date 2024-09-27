@@ -39,7 +39,11 @@ export const sendRemindersToAll = async (
 export async function sendReminderToOne(ctx: CallbackQueryContext<Context>) {
   const { userId } = sendReminderData.unpack(ctx.callbackQuery.data);
   try {
-    await ctx.deleteMessage();
+    try {
+      await ctx.deleteMessage();
+    } catch (error) {
+      ctx.logger.debug("Error deleting message:", error);
+    }
 
     await ctx.api.sendMessage(userId, REMINDER_MSG_TEXT, markup);
 
@@ -53,7 +57,11 @@ export async function postponeReminder(ctx: CallbackQueryContext<Context>) {
   const HOUR_WAIT = 1;
 
   try {
-    await ctx.deleteMessage();
+    try {
+      await ctx.deleteMessage();
+    } catch (error) {
+      ctx.logger.debug("Error deleting message:", error);
+    }
 
     await new Promise((resolve) => {
       setTimeout(resolve, 1000 * 60 * 60 * HOUR_WAIT);

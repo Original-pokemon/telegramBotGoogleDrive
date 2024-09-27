@@ -21,7 +21,12 @@ export async function userPanel(ctx: Context) {
     session.external.scene = "sending_photo";
     logger.debug('Session scene set to "sending_photo"');
 
-    await ctx.deleteMessage();
+    try {
+      await ctx.deleteMessage();
+    } catch (error) {
+      logger.debug("Error deleting message:", error);
+    }
+
     await sendQuestionMessage(ctx, 0);
   } catch (error: unknown) {
     if (error instanceof Error) {

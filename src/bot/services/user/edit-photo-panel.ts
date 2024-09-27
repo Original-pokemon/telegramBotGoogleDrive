@@ -7,7 +7,11 @@ export async function editPhotoPanel(ctx: CallbackQueryContext<Context>) {
   const { customData, scene } = session.external;
 
   try {
-    await ctx.deleteMessage();
+    try {
+      await ctx.deleteMessage();
+    } catch (error) {
+      logger.debug("Error deleting message:", error);
+    }
 
     if (scene !== "end_msg") {
       logger.warn("Attempted to edit photo outside of end message scene.");

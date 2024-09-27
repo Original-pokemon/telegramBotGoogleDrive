@@ -18,7 +18,11 @@ export async function getPhotoAnswer(ctx: Context) {
     // Проверяем, если пользователь прервал предыдущую проверку
     if (!message?.photo && callbackQuery?.data !== "skip_photo") {
       ctx.logger.debug("User interrupted previous check, restarting...");
-      await ctx.deleteMessage();
+      try {
+        await ctx.deleteMessage();
+      } catch (error) {
+        ctx.logger.debug("Error deleting message:", error);
+      }
       await handleRestartCheck(ctx);
       return;
     }
@@ -26,7 +30,11 @@ export async function getPhotoAnswer(ctx: Context) {
     // Проверяем правильность сцены
     if (ctx.session.external.scene !== "sending_photo") {
       ctx.logger.warn("Incorrect scene, restarting check required.");
-      await ctx.deleteMessage();
+      try {
+        await ctx.deleteMessage();
+      } catch (error) {
+        ctx.logger.debug("Error deleting message:", error);
+      }
       await ctx.reply("Пожалуйста, перезапустите проверку");
       return;
     }

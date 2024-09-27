@@ -14,7 +14,12 @@ export async function handleCallbackQuery(ctx: Context) {
       throw new Error("Questions not found");
     }
 
-    await ctx.deleteMessage();
+    try {
+      await ctx.deleteMessage();
+    } catch (error) {
+      logger.debug("Error deleting message:", error);
+    }
+
     answers.push(undefined);
 
     // Log the current state before proceeding
