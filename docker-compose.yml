@@ -2,7 +2,7 @@ version: '3'
 
 services:
   google_telegram_bot:
-    image: google_telegram_bot:latest
+    image: ${DOCKER_USERNAME}/google_telegram_bot:latest
     environment:
       NODE_ENV: production
       LOG_LEVEL: info
