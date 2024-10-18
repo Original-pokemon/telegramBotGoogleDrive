@@ -4,7 +4,7 @@ services:
   google_telegram_bot:
     image: google_telegram_bot:latest
     environment:
-      NODE_ENV: development
+      NODE_ENV: production
       LOG_LEVEL: info
       DATABASE_URL: ${DATABASE_URL}
       SHADOW_DATABASE_URL: ${SHADOW_DATABASE_URL}
