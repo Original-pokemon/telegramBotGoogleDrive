@@ -116,6 +116,25 @@ class GoogleRepository {
     return data.id;
   }
 
+  async deleteFolder(folderId: string) {
+    if (!this.drive) {
+      throw new Error("Google Drive API is not initialized.");
+    }
+
+    try {
+      logger.debug(`Deleting folder with ID: ${folderId}...`);
+
+      await this.drive.files.delete({
+        fileId: folderId,
+      });
+
+      logger.debug(`Folder with ID ${folderId} successfully deleted.`);
+    } catch (error) {
+      logger.error("Error deleting folder:", error);
+      throw error;
+    }
+  }
+
   async upload({
     urlPath,
     fileName,
