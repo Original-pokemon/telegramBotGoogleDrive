@@ -20,7 +20,17 @@ async function sendPhotosToDrive(
     }, Options),
   );
 
-  await Promise.allSettled(promises);
+  const results = await Promise.allSettled(promises);
+
+  const rejected = results.filter(
+    (r): r is PromiseRejectedResult => r.status === "rejected",
+  );
+
+  if (rejected.length > 0) {
+    throw new Error(
+      `Error when uploading photos:: ${rejected.map((r: PromiseRejectedResult) => r.reason).join(", ")}`,
+    );
+  }
 
   return true;
 }
