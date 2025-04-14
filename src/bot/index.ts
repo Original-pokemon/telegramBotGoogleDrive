@@ -100,7 +100,7 @@ export default async function createBot(
   );
   bot.api.setMyCommands([{ command: "start", description: "Start the bot" }]);
 
-  const scheduleFeature = createScheduleFeature(bot);
+  const scheduleFeature = createScheduleFeature(bot, repositories);
   const conversationsFeature = createConversationFeature(repositories);
 
   protectedBot.use(sequentialize(getSessionKey));

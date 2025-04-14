@@ -40,6 +40,8 @@ try {
     logger.info("shutdown");
 
     await runner?.stop();
+    await bot.stop();
+    await dataBase.disconnect();
   });
 
   await Promise.all([bot.init()]);
