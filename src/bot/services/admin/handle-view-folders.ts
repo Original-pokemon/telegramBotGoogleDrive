@@ -1,7 +1,7 @@
 import { RepositoryType } from "#root/bot/context.js";
 import logger from "#root/logger.js";
 
-export const handleViewFolders = async (repositories: RepositoryType) => {
+export const deleteOldFolders = async (repositories: RepositoryType) => {
   const { photoFolders, googleDrive } = repositories;
   const currentDate = new Date();
   const oneMonthAgo = new Date(
