@@ -27,6 +27,8 @@ export const deleteOldFolders = async (repositories: RepositoryType) => {
     });
 
     await Promise.all(deletePromises);
+
+    logger.info(`delete ${folders.length} old folders`);
   } catch (error) {
     logger.error("throw error when found folders", error);
   }
