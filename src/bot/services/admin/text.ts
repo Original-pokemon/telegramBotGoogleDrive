@@ -8,4 +8,5 @@ export const adminPanelTexts = {
   ENTER_LETTER_TEXT: "Отправьте текcт",
   ENTER_USER_ID: "Отправьте ID пользователя",
   ALL_USERS: "Все пользователи",
+  SELECT_GROUP: "Выберите группу пользователей",
 };

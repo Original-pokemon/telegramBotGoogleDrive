@@ -3,6 +3,7 @@ import {
   promoteUserData,
   sendReminderData,
   userIdData,
+  viewUserFoldersData,
 } from "#root/bot/callback-data/index.js";
 import { Context } from "#root/bot/context.js";
 import { UserGroup } from "#root/const.js";
@@ -14,14 +15,17 @@ const userProfileTexts = {
   USER_NOT_FOUND_RESPONSE: "Данный пользователь не найден!",
 };
 
-function getUserInfo(
+async function getUserInfo(
   created_date: string,
   id: string,
   name: string,
   group_id: string,
   user_folder: string | null,
+  ctx: Context,
 ) {
-  return `Информация о пользователе:\nДата регистрации: ${created_date}\nID: ${id}\nНикнейм: ${name}\nРоль: ${group_id}\nЛичная папка: ${user_folder}`;
+  const folders = await ctx.repositories.photoFolders.getFoldersByUserId(id);
+  const folderCount = folders.length;
+  return `Информация о пользователе:\nДата регистрации: ${created_date}\nID: ${id}\nНикнейм: ${name}\nРоль: ${group_id}\nЛичная папка: ${user_folder}\nКоличество папок: ${folderCount}`;
 }
 
 function createAdminPromotionButton(userId: string, isAdmin: boolean) {
@@ -41,6 +45,13 @@ function createReminderButton(userId: string) {
   };
 }
 
+function createViewFoldersButton(userId: string) {
+  return {
+    text: "Просмотреть папки",
+    callback_data: viewUserFoldersData.pack({ userId }),
+  };
+}
+
 function createUserProfileKeyboard(
   userId: string,
   group_id: string,
@@ -53,6 +64,8 @@ function createUserProfileKeyboard(
   if (group_id !== UserGroup.Admin && group_id !== UserGroup.WaitConfirm) {
     markup.push([createReminderButton(userId)]);
   }
+
+  markup.push([createViewFoldersButton(userId)]);
 
   const keyboard = InlineKeyboard.from(markup);
 
@@ -93,12 +106,18 @@ export async function userProfile(ctx: Context) {
     const markup = createUserProfileKeyboard(id, group_id);
     const formattedDate = new Date(created_date).toLocaleDateString();
 
-    await ctx.reply(
-      getUserInfo(formattedDate, id, name, group_id, user_folder),
-      {
-        reply_markup: markup,
-      },
+    const userInfo = await getUserInfo(
+      formattedDate,
+      id,
+      name,
+      group_id,
+      user_folder,
+      ctx,
     );
+
+    await ctx.reply(userInfo, {
+      reply_markup: markup,
+    });
 
     ctx.logger.debug(`User profile sent for user ID: ${id}`);
     return true;

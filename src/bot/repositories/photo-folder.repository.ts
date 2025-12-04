@@ -18,6 +18,30 @@ export default class PhotoFolderRepository extends Repository {
     }
   }
 
+  async getFoldersByUserId(userId: string): Promise<PhotoFolder[]> {
+    logger.trace(`Attempting to retrieve folders for user id: ${userId}`);
+    try {
+      const folders = await this.client.photoFolder.findMany({
+        where: { user_id: userId },
+        orderBy: { creation_date: "desc" },
+      });
+      logger.debug(
+        `Successfully retrieved ${folders.length} folders for user id: ${userId}`,
+      );
+      return folders;
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        logger.error(
+          `Error retrieving folders for user id ${userId}: ${error.message}`,
+        );
+        throw new Error(
+          `Error retrieving folders for user id ${userId}: \n${error.message}`,
+        );
+      }
+      throw error;
+    }
+  }
+
   async getFolder(folderId: string): Promise<PhotoFolder | null> {
     logger.trace(`Attempting to retrieve folder with id: ${folderId}`);
     try {
