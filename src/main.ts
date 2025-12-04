@@ -1,5 +1,6 @@
 import { PrismaAdapter } from "@grammyjs/storage-prisma";
 import { run, RunnerHandle } from "@grammyjs/runner";
+import schedule from "node-schedule";
 import googleRepository from "./google-drive/index.js";
 import createBot from "./bot/index.js";
 import dataBase from "./prisma/index.js";
@@ -39,6 +40,7 @@ try {
   onShutdown(async () => {
     logger.info("shutdown");
 
+    await schedule.gracefulShutdown();
     await runner?.stop();
     await bot.stop();
     await dataBase.disconnect();
