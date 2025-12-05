@@ -18,6 +18,7 @@ import {
   newsletterPanel,
   editUserName,
   sendNewsletterForAll,
+  confirmSendNewsletter,
   manageUsersPanel,
   manageSystemPanel,
   showGroupSelectionForUser,
@@ -44,6 +45,7 @@ import {
   changeUserGroupData,
   backToUserProfileData,
   manageUserData,
+  confirmSendNewsletterData,
 } from "../callback-data/index.js";
 import { logHandle } from "../helpers/logging.js";
 
@@ -217,6 +219,14 @@ feature.callbackQuery(
   sendBroadcastData.filter(),
   logHandle("callback-query-send-broadcast"),
   newsletterPanel,
+);
+feature.callbackQuery(
+  confirmSendNewsletterData.filter(),
+  logHandle("callback-query-confirm-send-newsletter"),
+  async (ctx) => {
+    const { action } = confirmSendNewsletterData.unpack(ctx.callbackQuery.data);
+    await confirmSendNewsletter(ctx, action);
+  },
 );
 
 feature.hears(AdminButtons.FIND_USER, logHandle("hears-find-user"), userSearch);

@@ -24,3 +24,4 @@ export * from "./promote-user-action.js";
 export * from "./restrict-user-access-action.js";
 export * from "./change-user-group-action.js";
 export * from "./manage-user.js";
+export * from "./confirm-send-newsletter.js";

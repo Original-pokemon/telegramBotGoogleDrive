@@ -50,8 +50,7 @@ export async function viewUserFolders(
       { userId },
     );
 
-    // Add back button - since this is called from user profile, back to profile?
-    // For now, no back button, or add a custom one.
+    addBackButton(keyboard, backToUserProfileData.pack({ userId }));
 
     ctx.logger.debug("InlineKeyboard created with paginated folders");
 

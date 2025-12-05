@@ -24,6 +24,7 @@ export type ExternalSessionData = {
   answers: (AnswerType | undefined)[];
   questions: Question[];
   customData: { [key: string]: unknown };
+  newsletterText?: string;
 };
 
 export type SessionData = {
