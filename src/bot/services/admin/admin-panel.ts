@@ -1,18 +1,46 @@
 import { Context } from "#root/bot/context.js";
-import { Keyboard } from "grammy";
+import { InlineKeyboard } from "grammy";
+import { addBackButton } from "#root/bot/helpers/keyboard.js";
+import { UserGroup } from "#root/const.js";
+import {
+  manageUsersData,
+  manageSystemData,
+  showAllUsersData,
+  findUserData,
+  setNotificationTimeData,
+  configureQuestionsData,
+  sendBroadcastData,
+} from "#root/bot/callback-data/index.js";
 import { adminPanelTexts } from "./text.js";
 
-function createAdminKeyboard(): Keyboard {
-  return new Keyboard()
-    .text(adminPanelTexts.SHOW_ALL_USERS)
-    .text(adminPanelTexts.FIND_USER)
+function createAdminKeyboard(): InlineKeyboard {
+  return new InlineKeyboard()
+    .text("Управлять пользователями", manageUsersData.pack({}))
     .row()
-    .text(adminPanelTexts.SET_NOTIFICATION_TIME)
-    .text(adminPanelTexts.CONFIGURE_QUESTIONS)
-    .row()
-    .text(adminPanelTexts.SEND_BROADCAST)
-    .resized();
+    .text("Управлять системой", manageSystemData.pack({}));
 }
+
+function createManageUsersKeyboard(): InlineKeyboard {
+  const keyboard = new InlineKeyboard()
+    .text(adminPanelTexts.SHOW_ALL_USERS, showAllUsersData.pack({}))
+    .text(adminPanelTexts.FIND_USER, findUserData.pack({}))
+    .row();
+  return addBackButton(keyboard, UserGroup.Admin);
+}
+
+function createManageSystemKeyboard(): InlineKeyboard {
+  const keyboard = new InlineKeyboard()
+    .text(
+      adminPanelTexts.SET_NOTIFICATION_TIME,
+      setNotificationTimeData.pack({}),
+    )
+    .text(adminPanelTexts.CONFIGURE_QUESTIONS, configureQuestionsData.pack({}))
+    .row()
+    .text(adminPanelTexts.SEND_BROADCAST, sendBroadcastData.pack({}))
+    .row();
+  return addBackButton(keyboard, UserGroup.Admin);
+}
+
 export async function adminPanel(ctx: Context) {
   ctx.logger.trace("Admin panel command invoked");
 
@@ -20,7 +48,7 @@ export async function adminPanel(ctx: Context) {
     const keyboard = createAdminKeyboard();
     ctx.logger.debug("Admin keyboard created");
 
-    await ctx.reply(adminPanelTexts.MANAGE_USERS, {
+    await ctx.editMessageText(adminPanelTexts.MANAGE_USERS, {
       reply_markup: keyboard,
     });
 
@@ -29,5 +57,31 @@ export async function adminPanel(ctx: Context) {
     ctx.logger.error(
       `Error in admin.service > adminPanel: ${error instanceof Error ? error.message : error}`,
     );
+  }
+}
+
+export async function manageUsersPanel(ctx: Context) {
+  ctx.logger.trace("Manage users panel invoked");
+
+  try {
+    const keyboard = createManageUsersKeyboard();
+    await ctx.editMessageText("Управление пользователями", {
+      reply_markup: keyboard,
+    });
+  } catch (error) {
+    ctx.logger.error(`Error in manageUsersPanel: ${error}`);
+  }
+}
+
+export async function manageSystemPanel(ctx: Context) {
+  ctx.logger.trace("Manage system panel invoked");
+
+  try {
+    const keyboard = createManageSystemKeyboard();
+    await ctx.editMessageText("Управление системой", {
+      reply_markup: keyboard,
+    });
+  } catch (error) {
+    ctx.logger.error(`Error in manageSystemPanel: ${error}`);
   }
 }

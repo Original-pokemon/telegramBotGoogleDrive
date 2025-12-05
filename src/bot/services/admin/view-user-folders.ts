@@ -1,9 +1,14 @@
 import {
   viewUserFoldersPageData,
   openFolderData,
+  backToUserProfileData,
 } from "#root/bot/callback-data/index.js";
 import { Context } from "#root/bot/context.js";
-import { paginateItems, getPageKeyboard } from "#root/bot/helpers/keyboard.js";
+import {
+  paginateItems,
+  getPageKeyboard,
+  addBackButton,
+} from "#root/bot/helpers/keyboard.js";
 
 export async function viewUserFolders(
   ctx: Context,

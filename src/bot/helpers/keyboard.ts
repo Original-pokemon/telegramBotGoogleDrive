@@ -77,14 +77,12 @@ export function getPageKeyboard<S extends PaginatedSchema>(
  * Adds a back button to the keyboard.
  * @param keyboard The keyboard to add the button to.
  * @param callbackData The callback data of the button.
+ * @param text The text of the back button (default: "↩️ В прошлое меню").
  */
 export function addBackButton(
   keyboard: InlineKeyboard,
   callbackData: string,
+  text: string = "↩️ В прошлое меню",
 ): InlineKeyboard {
-  return keyboard
-    .row()
-    .text(" ", " ")
-    .row()
-    .text("↩️ В прошлое меню", callbackData);
+  return keyboard.row().text(" ", " ").row().text(text, callbackData);
 }

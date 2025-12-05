@@ -4,10 +4,14 @@ import {
   sendReminderData,
   userIdData,
   viewUserFoldersData,
+  changeUserGroupData,
+  backToGroupsData,
+  manageUserData,
 } from "#root/bot/callback-data/index.js";
 import { Context } from "#root/bot/context.js";
 import { UserGroup } from "#root/const.js";
 import { InlineKeyboard } from "grammy";
+import { addBackButton } from "#root/bot/helpers/keyboard.js";
 
 const userProfileTexts = {
   NO_USER_ID: "No user ID provided",
@@ -25,7 +29,12 @@ async function getUserInfo(
 ) {
   const folders = await ctx.repositories.photoFolders.getFoldersByUserId(id);
   const folderCount = folders.length;
-  return `Информация о пользователе:\nДата регистрации: ${created_date}\nID: ${id}\nНикнейм: ${name}\nРоль: ${group_id}\nЛичная папка: ${user_folder}\nКоличество папок: ${folderCount}`;
+
+  const groups = await ctx.repositories.groups.getAllGroups();
+  const group = groups.find((g) => g.id === group_id);
+  const roleDescription = group ? group.description : group_id;
+
+  return `Информация о пользователе:\nДата регистрации: ${created_date}\nID: ${id}\nНикнейм: ${name}\nРоль: ${roleDescription}\nЛичная папка: ${user_folder}\nКоличество папок: ${folderCount}`;
 }
 
 function createAdminPromotionButton(userId: string, isAdmin: boolean) {
@@ -52,36 +61,51 @@ function createViewFoldersButton(userId: string) {
   };
 }
 
+function createManageUserButton(userId: string) {
+  return {
+    text: "Изменить данные",
+    callback_data: manageUserData.pack({ userId }),
+  };
+}
+
 function createUserProfileKeyboard(
   userId: string,
   group_id: string,
 ): InlineKeyboard {
-  const markup = [
-    [createAdminPromotionButton(userId, group_id === UserGroup.Admin)],
-    [createAccessButton(userId, group_id === UserGroup.WaitConfirm)],
-  ];
+  let keyboard = new InlineKeyboard()
+    .text(
+      createViewFoldersButton(userId).text,
+      createViewFoldersButton(userId).callback_data,
+    )
+    .row()
+    .text(
+      createManageUserButton(userId).text,
+      createManageUserButton(userId).callback_data,
+    )
+    .row();
 
   if (group_id !== UserGroup.Admin && group_id !== UserGroup.WaitConfirm) {
-    markup.push([createReminderButton(userId)]);
+    keyboard = keyboard
+      .text(
+        createReminderButton(userId).text,
+        createReminderButton(userId).callback_data,
+      )
+      .row();
   }
 
-  markup.push([createViewFoldersButton(userId)]);
-
-  const keyboard = InlineKeyboard.from(markup);
-
-  return keyboard;
+  return addBackButton(keyboard, backToGroupsData.pack({}));
 }
 
-export async function userProfile(ctx: Context) {
+export async function userProfile(ctx: Context, userId?: string) {
   ctx.logger.trace("User profile requested");
 
-  let id: string | undefined;
+  let id: string | undefined = userId;
 
-  if (ctx.callbackQuery?.data) {
+  if (!id && ctx.callbackQuery?.data) {
     const callbackData = userIdData.unpack(ctx.callbackQuery.data);
     id = callbackData.id;
     ctx.logger.debug(`User ID unpacked from callback data: ${id}`);
-  } else if (ctx.msg?.text) {
+  } else if (!id && ctx.msg?.text) {
     id = ctx.msg.text;
     ctx.logger.debug(`User ID received from message text: ${id}`);
   }
@@ -97,7 +121,7 @@ export async function userProfile(ctx: Context) {
     const user = await ctx.repositories.users.getUser(id);
 
     if (!user) {
-      await ctx.reply(userProfileTexts.USER_NOT_FOUND_RESPONSE);
+      await ctx.editMessageText(userProfileTexts.USER_NOT_FOUND_RESPONSE);
       ctx.logger.debug(userProfileTexts.USER_NOT_FOUND);
       return;
     }
@@ -115,7 +139,7 @@ export async function userProfile(ctx: Context) {
       ctx,
     );
 
-    await ctx.reply(userInfo, {
+    await ctx.editMessageText(userInfo, {
       reply_markup: markup,
     });
 

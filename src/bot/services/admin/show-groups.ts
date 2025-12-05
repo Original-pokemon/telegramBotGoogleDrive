@@ -1,6 +1,7 @@
 import { selectGroupData } from "#root/bot/callback-data/index.js";
 import { Context } from "#root/bot/context.js";
 import { InlineKeyboard } from "grammy";
+import { addBackButton } from "#root/bot/helpers/keyboard.js";
 import { UserGroup } from "#root/const.js";
 import { adminPanelTexts } from "./text.js";
 
@@ -8,14 +9,17 @@ export async function showGroups(ctx: Context) {
   ctx.logger.trace("Show groups command invoked");
 
   try {
+    const groups = await ctx.repositories.groups.getAllGroups();
+    ctx.logger.debug(`Retrieved ${groups.length} groups from database`);
+
     const markup = new InlineKeyboard();
 
     // Add buttons for each group
-    for (const group of Object.values(UserGroup).sort())
-      markup.text(group, selectGroupData.pack({ group })).row();
+    for (const { id, description } of groups)
+      markup.text(description, selectGroupData.pack({ group: id })).row();
 
     // Add back button
-    markup.text("Назад", UserGroup.Admin).row();
+    addBackButton(markup, UserGroup.Admin);
 
     ctx.logger.debug("InlineKeyboard created with group data");
 

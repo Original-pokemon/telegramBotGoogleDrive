@@ -3,6 +3,14 @@ import { UserGroup } from "../src/const.js";
 
 const prisma = new PrismaClient();
 
+const groupDescriptions: Record<string, string> = {
+  [UserGroup.Admin]: "Администратор системы",
+  [UserGroup.WaitConfirm]: "Ожидает подтверждения доступа",
+  [UserGroup.Azs]: "АЗС сотрудник",
+  [UserGroup.AzsWithStore]: "АЗС сотрудник с магазином",
+  [UserGroup.Gpn]: "ГПН сотрудник",
+};
+
 const upsertGroups = async () => {
   const groupIds = Object.values(UserGroup);
 
@@ -14,6 +22,7 @@ const upsertGroups = async () => {
       update: {},
       create: {
         id,
+        description: groupDescriptions[id] || "Описание не указано",
       },
     });
 

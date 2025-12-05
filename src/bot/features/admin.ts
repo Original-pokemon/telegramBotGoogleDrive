@@ -7,23 +7,25 @@ import {
   adminPanel,
   userProfile,
   updateUserGroup,
-  promoteUser,
   manageUserAccess,
   createUserFolder,
   requestNewUserName,
   userSearch,
   showGroups,
   showUsersByGroupPage,
+  showManageUserMenu,
   viewUserFolders,
   newsletterPanel,
   editUserName,
   sendNewsletterForAll,
+  manageUsersPanel,
+  manageSystemPanel,
+  showGroupSelectionForUser,
 } from "../services/admin/index.js";
 import {
   accessUserData,
   createFolderData,
   editNameData,
-  promoteUserData,
   sendReminderData,
   updateUserGroupData,
   selectGroupData,
@@ -32,6 +34,16 @@ import {
   viewUserFoldersData,
   viewUserFoldersPageData,
   openFolderData,
+  showAllUsersData,
+  findUserData,
+  setNotificationTimeData,
+  configureQuestionsData,
+  sendBroadcastData,
+  manageUsersData,
+  manageSystemData,
+  changeUserGroupData,
+  backToUserProfileData,
+  manageUserData,
 } from "../callback-data/index.js";
 import { logHandle } from "../helpers/logging.js";
 
@@ -62,12 +74,10 @@ feature.callbackQuery(
 feature.callbackQuery(
   userIdData.filter(),
   logHandle("callback-query-user-profile"),
-  userProfile,
-);
-feature.callbackQuery(
-  promoteUserData.filter(),
-  logHandle("callback-query-promote-user"),
-  promoteUser,
+  async (ctx) => {
+    const { id } = userIdData.unpack(ctx.callbackQuery.data);
+    await userProfile(ctx, id);
+  },
 );
 feature.callbackQuery(
   accessUserData.filter(),
@@ -145,6 +155,69 @@ feature.callbackQuery(
     );
   },
 );
+feature.callbackQuery(
+  changeUserGroupData.filter(),
+  logHandle("callback-query-change-user-group"),
+  async (ctx) => {
+    const { userId } = changeUserGroupData.unpack(ctx.callbackQuery.data);
+    await showGroupSelectionForUser(ctx, userId);
+  },
+);
+feature.callbackQuery(
+  backToUserProfileData.filter(),
+  logHandle("callback-query-back-to-user-profile"),
+  async (ctx) => {
+    const { userId } = backToUserProfileData.unpack(ctx.callbackQuery.data);
+    await userProfile(ctx, userId);
+  },
+);
+feature.callbackQuery(
+  manageUserData.filter(),
+  logHandle("callback-query-manage-user"),
+  async (ctx) => {
+    const { userId } = manageUserData.unpack(ctx.callbackQuery.data);
+    await showManageUserMenu(ctx, userId);
+  },
+);
+feature.callbackQuery(
+  manageUsersData.filter(),
+  logHandle("callback-query-manage-users"),
+  manageUsersPanel,
+);
+feature.callbackQuery(
+  manageSystemData.filter(),
+  logHandle("callback-query-manage-system"),
+  manageSystemPanel,
+);
+feature.callbackQuery(
+  showAllUsersData.filter(),
+  logHandle("callback-query-show-all-users"),
+  showGroups,
+);
+feature.callbackQuery(
+  findUserData.filter(),
+  logHandle("callback-query-find-user"),
+  userSearch,
+);
+feature.callbackQuery(
+  setNotificationTimeData.filter(),
+  logHandle("callback-query-set-notification-time"),
+  async (ctx) => {
+    await ctx.reply("Настройка времени оповещения не реализована");
+  },
+);
+feature.callbackQuery(
+  configureQuestionsData.filter(),
+  logHandle("callback-query-configure-questions"),
+  async (ctx) => {
+    await ctx.reply("Настройка вопросов не реализована");
+  },
+);
+feature.callbackQuery(
+  sendBroadcastData.filter(),
+  logHandle("callback-query-send-broadcast"),
+  newsletterPanel,
+);
 
 feature.hears(AdminButtons.FIND_USER, logHandle("hears-find-user"), userSearch);
 feature.hears(AdminButtons.ALL_USERS, logHandle("hears-all-users"), showGroups);
@@ -157,7 +230,9 @@ feature.hears(
 const router = ({ session }: Context) => session.external.scene as SceneType;
 
 const routeHandlers = {
-  [Scene.enterId]: userProfile,
+  [Scene.enterId]: async (ctx: Context) => {
+    await userProfile(ctx, ctx.msg?.text);
+  },
   [Scene.enterName]: editUserName,
   [Scene.enterLetterText]: sendNewsletterForAll,
 };

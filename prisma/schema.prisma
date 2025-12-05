@@ -22,9 +22,10 @@ model Session {
 }
 
 model Group {
-  id       String     @id
-  user     User[]
-  question Question[] @relation("question_to_group")
+  id          String     @id
+  description String
+  user        User[]
+  question    Question[] @relation("question_to_group")
 
   @@map("groups")
 }

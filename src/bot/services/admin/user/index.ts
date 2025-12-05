@@ -6,3 +6,5 @@ export * from "./user-profile.js";
 export * from "./user-search.js";
 export * from "./user-update-group.js";
 export * from "./user-access.js";
+export * from "./show-group-selection.js";
+export * from "./show-manage-user-menu.js";

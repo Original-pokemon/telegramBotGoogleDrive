@@ -38,12 +38,13 @@ export default class GroupRepository extends Repository {
     }
   }
 
-  async addGroup(groupId: string): Promise<Group> {
+  async addGroup(groupId: string, description: string): Promise<Group> {
     logger.trace(`Attempting to add group with id: ${groupId}`);
     try {
       const newGroup = await this.client.group.create({
         data: {
           id: groupId,
+          description,
         },
       });
       logger.debug(`Successfully added group with id: ${groupId}`);
