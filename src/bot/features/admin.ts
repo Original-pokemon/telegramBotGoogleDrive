@@ -1,4 +1,4 @@
-import { Composer } from "grammy";
+import { Composer, InlineKeyboard } from "grammy";
 import { UserGroup } from "../../const.js";
 import { Context } from "../context.js";
 import { sendReminderToOne } from "../services/schedule.js";
@@ -23,7 +23,9 @@ import {
   manageSystemPanel,
   manageRolesPanel,
   showRoleDetails,
+  showQuestionDetails,
   showGroupSelectionForUser,
+  showQuestionsPanel,
 } from "../services/admin/index.js";
 import {
   accessUserData,
@@ -34,6 +36,8 @@ import {
   selectGroupData,
   backToGroupsData,
   showUsersPageData,
+  backToQuestionsData,
+  showQuestionsPageData,
   viewUserFoldersData,
   viewUserFoldersPageData,
   openFolderData,
@@ -51,6 +55,7 @@ import {
   confirmSendNewsletterData,
   startEditRoleData,
 } from "../callback-data/index.js";
+import { addBackButton } from "../helpers/keyboard.js";
 import { logHandle } from "../helpers/logging.js";
 
 const Scene = {
@@ -59,6 +64,9 @@ const Scene = {
   enterLetterText: "enter_letter_text",
   enterRoleId: "enter_role_id",
   enterRoleDescription: "enter_role_description",
+  enterQuestionName: "enter_question_name",
+  enterQuestionText: "enter_question_text",
+  enterQuestionRequire: "enter_question_require",
 } as const;
 
 const AdminButtons = {
@@ -124,6 +132,271 @@ feature.callbackQuery(
   backToGroupsData.filter(),
   logHandle("callback-query-back-to-groups"),
   showGroups,
+);
+feature.callbackQuery(
+  backToQuestionsData.filter(),
+  logHandle("callback-query-back-to-questions"),
+  (ctx) => showQuestionsPanel(ctx, 0),
+);
+feature.callbackQuery(
+  showQuestionsPageData.filter(),
+  logHandle("callback-query-show-questions-page"),
+  async (ctx) => {
+    const { pageIndex } = showQuestionsPageData.unpack(ctx.callbackQuery.data);
+    await showQuestionsPanel(ctx, pageIndex);
+  },
+);
+
+feature.callbackQuery(
+  /^editQuestion:(\d+)$/,
+  logHandle("callback-edit-question"),
+  async (ctx) => {
+    const questionId = Number.parseInt(ctx.match[1], 10);
+    await showQuestionDetails(ctx, questionId);
+  },
+);
+
+feature.callbackQuery(
+  /^editQuestionName:(\d+)$/,
+  logHandle("callback-edit-question-name"),
+  async (ctx) => {
+    const questionId = Number.parseInt(ctx.match[1], 10);
+    ctx.session.external.editQuestionId = questionId;
+    ctx.session.external.scene = Scene.enterQuestionName;
+    await ctx.reply("Введите новое название вопроса:");
+  },
+);
+
+feature.callbackQuery(
+  /^editQuestionText:(\d+)$/,
+  logHandle("callback-edit-question-text"),
+  async (ctx) => {
+    const questionId = Number.parseInt(ctx.match[1], 10);
+    ctx.session.external.editQuestionId = questionId;
+    ctx.session.external.scene = Scene.enterQuestionText;
+    await ctx.reply("Введите новый текст вопроса:");
+  },
+);
+
+feature.callbackQuery(
+  /^toggleQuestionRequire:(\d+)$/,
+  logHandle("callback-toggle-question-require"),
+  async (ctx) => {
+    const questionId = Number.parseInt(ctx.match[1], 10);
+    const question = await ctx.repositories.questions.getQuestion(questionId);
+    if (!question) {
+      await ctx.reply("Вопрос не найден.");
+      return;
+    }
+    await ctx.repositories.questions.updateQuestion({
+      id: questionId,
+      name: question.name,
+      text: question.text,
+      require: !question.require,
+      groupIds: question.group.map((g) => g.id),
+    });
+    await ctx.reply(
+      `Обязательность вопроса изменена на: ${question.require ? "Нет" : "Да"}`,
+    );
+    await showQuestionDetails(ctx, questionId, false);
+  },
+);
+
+feature.callbackQuery(
+  /^manageQuestionGroups:(\d+)$/,
+  logHandle("callback-manage-question-groups"),
+  async (ctx) => {
+    const questionId = Number.parseInt(ctx.match[1], 10);
+    const question = await ctx.repositories.questions.getQuestion(questionId);
+    if (!question) {
+      await ctx.reply("Вопрос не найден.");
+      return;
+    }
+
+    const allGroups = await ctx.repositories.groups.getAllGroups();
+    const questionGroupIds = new Set(question.group.map((g) => g.id));
+
+    const keyboard = new InlineKeyboard();
+
+    for (const group of allGroups) {
+      if (
+        group.id !== UserGroup.Admin &&
+        group.description !== "ожидает выдачи роли"
+      ) {
+        const isBound = questionGroupIds.has(group.id);
+        const action = isBound ? "Удалить" : "Добавить";
+        keyboard
+          .text(
+            `${group.description} (${action})`,
+            `toggleQuestionGroup:${questionId}:${group.id}`,
+          )
+          .row();
+      }
+    }
+
+    addBackButton(keyboard, `backToQuestion:${questionId}`, "Назад к вопросу");
+
+    const text = `Управление группами для вопроса "${question.name}"`;
+    const options = {
+      reply_markup: keyboard,
+    };
+
+    try {
+      await ctx.editMessageText(text, options);
+    } catch {
+      // If edit fails, send new message
+      await ctx.reply(text, options);
+    }
+  },
+);
+
+feature.callbackQuery(
+  /^toggleQuestionGroup:(\d+):(.+)$/,
+  logHandle("callback-toggle-question-group"),
+  async (ctx) => {
+    const questionId = Number.parseInt(ctx.match[1], 10);
+    const groupId = ctx.match[2];
+    const question = await ctx.repositories.questions.getQuestion(questionId);
+    if (!question) {
+      await ctx.reply("Вопрос не найден.");
+      return;
+    }
+    const currentGroupIds = question.group.map((g) => g.id);
+    let newGroupIds;
+    newGroupIds = currentGroupIds.includes(groupId)
+      ? currentGroupIds.filter((id) => id !== groupId)
+      : [...currentGroupIds, groupId];
+    await ctx.repositories.questions.updateQuestion({
+      id: questionId,
+      name: question.name,
+      text: question.text,
+      require: question.require,
+      groupIds: newGroupIds,
+    });
+    // Update the message with new group management UI
+    const updatedQuestion =
+      await ctx.repositories.questions.getQuestion(questionId);
+    if (!updatedQuestion) {
+      await ctx.reply("Ошибка обновления.");
+      return;
+    }
+
+    const allGroups = await ctx.repositories.groups.getAllGroups();
+    const updatedGroupIds = new Set(updatedQuestion.group.map((g) => g.id));
+
+    const keyboard = new InlineKeyboard();
+
+    for (const group of allGroups) {
+      if (
+        group.id !== UserGroup.Admin &&
+        group.description !== "ожидает выдачи роли"
+      ) {
+        const isBound = updatedGroupIds.has(group.id);
+        const action = isBound ? "Удалить" : "Добавить";
+        keyboard
+          .text(
+            `${group.description} (${action})`,
+            `toggleQuestionGroup:${questionId}:${group.id}`,
+          )
+          .row();
+      }
+    }
+
+    addBackButton(keyboard, `backToQuestion:${questionId}`, "Назад к вопросу");
+
+    const text = `Управление группами для вопроса "${updatedQuestion.name}"`;
+    const options = {
+      reply_markup: keyboard,
+    };
+
+    try {
+      await ctx.editMessageText(text, options);
+    } catch {
+      // If edit fails, send new message
+      await ctx.reply(text, options);
+    }
+  },
+);
+
+feature.callbackQuery(
+  /^backToQuestion:(\d+)$/,
+  logHandle("callback-back-to-question"),
+  async (ctx) => {
+    const questionId = Number.parseInt(ctx.match[1], 10);
+    const question = await ctx.repositories.questions.getQuestion(questionId);
+    if (!question) {
+      await ctx.reply("Вопрос не найден.");
+      return;
+    }
+
+    const groupsText = question.group.map((g) => g.id).join(", ");
+
+    const keyboard = new InlineKeyboard()
+      .text("Изменить название", `editQuestionName:${questionId}`)
+      .text("Изменить текст", `editQuestionText:${questionId}`)
+      .row()
+      .text(
+        `Обязательный: ${question.require ? "Да" : "Нет"}`,
+        `toggleQuestionRequire:${questionId}`,
+      )
+      .text("Управление группами", `manageQuestionGroups:${questionId}`)
+      .row();
+
+    addBackButton(keyboard, backToQuestionsData.pack({}));
+
+    const text = `Вопрос: ${question.name}\nТекст: ${question.text}\nОбязательный: ${question.require ? "Да" : "Нет"}\nГруппы: ${groupsText}`;
+    const options = {
+      reply_markup: keyboard,
+    };
+
+    try {
+      await ctx.editMessageText(text, options);
+    } catch {
+      // If edit fails, send new message
+      await ctx.reply(text, options);
+    }
+  },
+);
+
+feature.callbackQuery(
+  /^deleteQuestion:(\d+)$/,
+  logHandle("callback-delete-question"),
+  async (ctx) => {
+    const questionId = Number.parseInt(ctx.match[1], 10);
+    const question = await ctx.repositories.questions.getQuestion(questionId);
+    if (!question) {
+      await ctx.reply("Вопрос не найден.");
+      return;
+    }
+    await ctx.editMessageText(
+      `Вы уверены, что хотите удалить вопрос "${question.name}"?`,
+      {
+        reply_markup: new InlineKeyboard()
+          .text("Да, удалить", `confirmDeleteQuestion:${questionId}`)
+          .text("Отмена", backToQuestionsData.pack({})),
+      },
+    );
+  },
+);
+
+feature.callbackQuery(
+  /^confirmDeleteQuestion:(\d+)$/,
+  logHandle("callback-confirm-delete-question"),
+  async (ctx) => {
+    const questionId = Number.parseInt(ctx.match[1], 10);
+    await ctx.repositories.questions.deleteQuestion(questionId);
+    await ctx.reply("Вопрос удален.");
+    await showQuestionsPanel(ctx, 0);
+  },
+);
+
+feature.callbackQuery(
+  "createQuestion",
+  logHandle("callback-create-question"),
+  async (ctx) => {
+    ctx.session.external.scene = Scene.enterQuestionName;
+    await ctx.reply("Введите название вопроса:");
+  },
 );
 feature.callbackQuery(
   showUsersPageData.filter(),
@@ -222,9 +495,7 @@ feature.callbackQuery(
 feature.callbackQuery(
   configureQuestionsData.filter(),
   logHandle("callback-query-configure-questions"),
-  async (ctx) => {
-    await ctx.reply("Настройка вопросов не реализована");
-  },
+  async (ctx) => showQuestionsPanel(ctx, 0),
 );
 feature.callbackQuery(
   sendBroadcastData.filter(),
@@ -329,6 +600,71 @@ const routeHandlers = {
     }
     ctx.session.external.scene = "";
     await manageRolesPanel(ctx);
+  },
+  [Scene.enterQuestionName]: async (ctx: Context) => {
+    const name = ctx.msg?.text;
+    if (!name) return;
+    if (ctx.session.external.editQuestionId) {
+      const questionId = ctx.session.external.editQuestionId;
+      const question = await ctx.repositories.questions.getQuestion(questionId);
+      if (!question) return;
+      await ctx.repositories.questions.updateQuestion({
+        id: questionId,
+        name,
+        text: question.text,
+        require: question.require,
+        groupIds: question.group.map((g) => g.id),
+      });
+      delete ctx.session.external.editQuestionId;
+      await ctx.reply("Название вопроса обновлено.");
+      await showQuestionDetails(ctx, questionId, false);
+    } else {
+      ctx.session.external.newQuestionName = name;
+      ctx.session.external.scene = Scene.enterQuestionText;
+      await ctx.reply("Введите текст вопроса:");
+    }
+  },
+  [Scene.enterQuestionText]: async (ctx: Context) => {
+    const text = ctx.msg?.text;
+    if (!text) return;
+    if (ctx.session.external.editQuestionId) {
+      const questionId = ctx.session.external.editQuestionId;
+      const question = await ctx.repositories.questions.getQuestion(questionId);
+      if (!question) return;
+      await ctx.repositories.questions.updateQuestion({
+        id: questionId,
+        name: question.name,
+        text,
+        require: question.require,
+        groupIds: question.group.map((g) => g.id),
+      });
+      delete ctx.session.external.editQuestionId;
+      await ctx.reply("Текст вопроса обновлен.");
+      await showQuestionDetails(ctx, questionId, false);
+    } else {
+      ctx.session.external.newQuestionText = text;
+      ctx.session.external.scene = Scene.enterQuestionRequire;
+      await ctx.reply("Вопрос обязательный? (да/нет):");
+    }
+  },
+  [Scene.enterQuestionRequire]: async (ctx: Context) => {
+    const requireText = ctx.msg?.text?.toLowerCase();
+    if (!requireText) return;
+    const require = requireText === "да";
+    ctx.session.external.newQuestionRequire = require;
+    // For simplicity, create with no groups, or add groups later
+    const question = await ctx.repositories.questions.addQuestion({
+      name: ctx.session.external.newQuestionName!,
+      text: ctx.session.external.newQuestionText!,
+      require,
+      groupIds: [],
+    });
+    delete ctx.session.external.newQuestionName;
+    delete ctx.session.external.newQuestionText;
+    delete ctx.session.external.newQuestionRequire;
+    ctx.session.external.scene = "";
+    await ctx.reply(`Вопрос создан с ID: ${question.id}`);
+    await showQuestionsPanel(ctx, 0, false);
   },
 };
 

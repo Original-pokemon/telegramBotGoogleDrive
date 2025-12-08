@@ -27,6 +27,10 @@ export type ExternalSessionData = {
   newsletterText?: string;
   editRoleId?: string;
   newRoleId?: string;
+  newQuestionName?: string;
+  newQuestionText?: string;
+  newQuestionRequire?: boolean;
+  editQuestionId?: number;
 };
 
 export type SessionData = {

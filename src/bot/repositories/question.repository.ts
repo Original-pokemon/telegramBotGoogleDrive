@@ -70,6 +70,9 @@ export default class QuestionRepository extends Repository {
         include: {
           group: true, // Включаем связанные группы
         },
+        orderBy: {
+          id: "asc",
+        },
       });
       logger.debug(`Successfully retrieved ${questions.length} questions`);
       return questions;
