@@ -21,6 +21,8 @@ import {
   confirmSendNewsletter,
   manageUsersPanel,
   manageSystemPanel,
+  manageRolesPanel,
+  showRoleDetails,
   showGroupSelectionForUser,
 } from "../services/admin/index.js";
 import {
@@ -42,10 +44,12 @@ import {
   sendBroadcastData,
   manageUsersData,
   manageSystemData,
+  manageRolesData,
   changeUserGroupData,
   backToUserProfileData,
   manageUserData,
   confirmSendNewsletterData,
+  startEditRoleData,
 } from "../callback-data/index.js";
 import { logHandle } from "../helpers/logging.js";
 
@@ -53,6 +57,8 @@ const Scene = {
   enterId: "enter_id",
   enterName: "enter_name",
   enterLetterText: "enter_letter_text",
+  enterRoleId: "enter_role_id",
+  enterRoleDescription: "enter_role_description",
 } as const;
 
 const AdminButtons = {
@@ -192,6 +198,11 @@ feature.callbackQuery(
   manageSystemPanel,
 );
 feature.callbackQuery(
+  manageRolesData.filter(),
+  logHandle("callback-query-manage-roles"),
+  manageRolesPanel,
+);
+feature.callbackQuery(
   showAllUsersData.filter(),
   logHandle("callback-query-show-all-users"),
   showGroups,
@@ -237,6 +248,55 @@ feature.hears(
   newsletterPanel,
 );
 
+feature.callbackQuery(
+  /^editRole:(.+)$/,
+  logHandle("callback-edit-role"),
+  async (ctx) => {
+    const roleId = ctx.match[1];
+    await showRoleDetails(ctx, roleId);
+  },
+);
+
+feature.callbackQuery(
+  startEditRoleData.filter(),
+  logHandle("callback-start-edit-role"),
+  async (ctx) => {
+    const { roleId } = startEditRoleData.unpack(ctx.callbackQuery.data);
+    ctx.session.external.editRoleId = roleId;
+    ctx.session.external.scene = Scene.enterRoleDescription;
+    await ctx.reply("Введите новое описание для роли:");
+  },
+);
+
+feature.callbackQuery(
+  /^deleteRole:(.+)$/,
+  logHandle("callback-delete-role"),
+  async (ctx) => {
+    const roleId = ctx.match[1];
+    // Check if users exist
+    const users = await ctx.repositories.users.getAllUsers();
+    const hasUsers = users.some((u) => u.group_id === roleId);
+    if (hasUsers) {
+      await ctx.reply(
+        "Нельзя удалить роль, так как есть пользователи в этой роли.",
+      );
+      return;
+    }
+    await ctx.repositories.groups.deleteGroup(roleId);
+    await ctx.reply("Роль удалена.");
+    await manageRolesPanel(ctx);
+  },
+);
+
+feature.callbackQuery(
+  "createRole",
+  logHandle("callback-create-role"),
+  async (ctx) => {
+    ctx.session.external.scene = Scene.enterRoleId;
+    await ctx.reply("Введите ID новой роли:");
+  },
+);
+
 const router = ({ session }: Context) => session.external.scene as SceneType;
 
 const routeHandlers = {
@@ -245,6 +305,31 @@ const routeHandlers = {
   },
   [Scene.enterName]: editUserName,
   [Scene.enterLetterText]: sendNewsletterForAll,
+  [Scene.enterRoleId]: async (ctx: Context) => {
+    const roleId = ctx.msg?.text;
+    if (!roleId) return;
+    ctx.session.external.newRoleId = roleId;
+    ctx.session.external.scene = Scene.enterRoleDescription;
+    await ctx.reply("Введите описание роли:");
+  },
+  [Scene.enterRoleDescription]: async (ctx: Context) => {
+    const description = ctx.msg?.text;
+    if (!description) return;
+    const roleId =
+      ctx.session.external.editRoleId || ctx.session.external.newRoleId;
+    if (!roleId) return;
+    if (ctx.session.external.editRoleId) {
+      await ctx.repositories.groups.updateGroup(roleId, description);
+      delete ctx.session.external.editRoleId;
+      await ctx.reply("Описание роли обновлено.");
+    } else if (ctx.session.external.newRoleId) {
+      await ctx.repositories.groups.createGroup({ id: roleId, description });
+      delete ctx.session.external.newRoleId;
+      await ctx.reply("Роль создана.");
+    }
+    ctx.session.external.scene = "";
+    await manageRolesPanel(ctx);
+  },
 };
 
 composer.route(router, routeHandlers);

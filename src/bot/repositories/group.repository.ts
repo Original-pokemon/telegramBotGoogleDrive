@@ -38,50 +38,50 @@ export default class GroupRepository extends Repository {
     }
   }
 
-  async addGroup(groupId: string, description: string): Promise<Group> {
-    logger.trace(`Attempting to add group with id: ${groupId}`);
+  async createGroup({
+    id,
+    description,
+  }: {
+    id: string;
+    description: string;
+  }): Promise<Group> {
+    logger.trace(`Attempting to create group with id: ${id}`);
     try {
       const newGroup = await this.client.group.create({
         data: {
-          id: groupId,
+          id,
           description,
         },
       });
-      logger.debug(`Successfully added group with id: ${groupId}`);
+      logger.debug(`Successfully created group with id: ${id}`);
       return newGroup;
     } catch (error: unknown) {
       if (error instanceof Error) {
-        logger.error(`Error adding group with id ${groupId}: ${error.message}`);
+        logger.error(`Error creating group with id ${id}: ${error.message}`);
         throw new Error(
-          `Error adding group with id ${groupId}: \n${error.message}`,
+          `Error creating group with id ${id}: \n${error.message}`,
         );
       }
       throw error;
     }
   }
 
-  async updateGroup(oldId: string, newId: string): Promise<Group> {
-    logger.trace(
-      `Attempting to update group with old id: ${oldId} to new id: ${newId}`,
-    );
+  async updateGroup(id: string, description: string): Promise<Group> {
+    logger.trace(`Attempting to update group with id: ${id}`);
     try {
       const updatedGroup = await this.client.group.update({
-        where: { id: oldId },
+        where: { id },
         data: {
-          id: newId,
+          description,
         },
       });
-      logger.debug(
-        `Successfully updated group from id: ${oldId} to new id: ${newId}`,
-      );
+      logger.debug(`Successfully updated group with id: ${id}`);
       return updatedGroup;
     } catch (error: unknown) {
       if (error instanceof Error) {
-        logger.error(
-          `Error updating group from id ${oldId} to ${newId}: ${error.message}`,
-        );
+        logger.error(`Error updating group with id ${id}: ${error.message}`);
         throw new Error(
-          `Error updating group from id ${oldId} to ${newId}: \n${error.message}`,
+          `Error updating group with id ${id}: \n${error.message}`,
         );
       }
       throw error;

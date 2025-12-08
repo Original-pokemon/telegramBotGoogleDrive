@@ -17,6 +17,8 @@ export * from "./configure-questions.js";
 export * from "./send-broadcast.js";
 export * from "./manage-users.js";
 export * from "./manage-system.js";
+export * from "./manage-roles.js";
+export * from "./start-edit-role.js";
 export * from "./change-user-group.js";
 export * from "./change-user-roles.js";
 export * from "./back-to-user-profile.js";

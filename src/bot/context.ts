@@ -25,6 +25,8 @@ export type ExternalSessionData = {
   questions: Question[];
   customData: { [key: string]: unknown };
   newsletterText?: string;
+  editRoleId?: string;
+  newRoleId?: string;
 };
 
 export type SessionData = {
