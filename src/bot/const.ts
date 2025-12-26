@@ -12,11 +12,6 @@ const Options = {
 };
 
 /**
- * @constant{string} The time at which the reminder is sent
- */
-const SCHEDULE_TIME = "10:00";
-
-/**
  * @constant{string}
  */
 const REMINDER_MSG_TEXT =
@@ -37,4 +32,4 @@ export const START_MSG = `👋 Приветствую!
 📸Данный бот предназначен для сбора фотографий.
 🔒Как только Вам выдадут доступ этот бот будет присылать Вам уведомления о необходимости прохождении проверки стандартов`;
 
-export { END_MSG_TEXT, Options, REMINDER_MSG_TEXT, SCHEDULE_TIME };
+export { END_MSG_TEXT, Options, REMINDER_MSG_TEXT };

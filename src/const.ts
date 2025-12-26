@@ -5,3 +5,7 @@ export const UserGroup = {
   AzsWithStore: "azsWithStore",
   Gpn: "gpn",
 } as const;
+
+export const Settings = {
+  NotificationTime: "notificationTime",
+} as const

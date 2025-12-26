@@ -1,6 +1,5 @@
 import { Bot, Composer } from "grammy";
 import schedule from "node-schedule";
-import { SCHEDULE_TIME } from "../const.js";
 import { Context, RepositoryType } from "../context.js";
 import { postponeReminder, sendRemindersToAll } from "../services/schedule.js";
 import { postponeCheckCallback } from "../callback-data/index.js";
@@ -18,7 +17,8 @@ export function createScheduleFeature(
     async () => {
       await deleteOldFolders(repositories);
 
-      const [hour, minute] = SCHEDULE_TIME.split(":");
+      const scheduleTime = await repositories.settings.getNotificationTime();
+      const [hour, minute] = scheduleTime.split(":");
       const interval = (+hour * 60 + +minute) * 60 * 1000;
 
       setTimeout(() => {
