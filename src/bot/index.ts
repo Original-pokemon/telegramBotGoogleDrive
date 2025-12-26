@@ -33,6 +33,8 @@ import { createConversationFeature } from "./conversations/conversations.js";
 import { userFeature } from "./features/user.js";
 import { unhandledFeature } from "./features/unhandled.js";
 import { errorHandler } from "./services/error.js";
+import { Settings } from "#root/const.js";
+import SettingsRepository from "./repositories/settings.repository.js";
 
 interface Dependencies {
   config: Config;
@@ -76,6 +78,7 @@ export default async function createBot(
     questions: new QuestionRepository(),
     photoFolders: new PhotoFolderRepository(),
     googleDrive: googleRepository,
+    settings: new SettingsRepository(),
   };
 
   const bot = new TelegramBot(token, {

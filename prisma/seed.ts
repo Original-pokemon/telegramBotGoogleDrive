@@ -1,7 +1,36 @@
 import { PrismaClient } from "@prisma/client";
-import { UserGroup } from "../src/const.js";
+import { UserGroup, Settings } from "../src/const.js";
 
 const prisma = new PrismaClient();
+
+const settingDescriptions: Record<string, string> = {
+  [Settings.NotificationTime]: "Время оповещения",
+};
+
+const upsertSettings = async () => {
+  const settingIds = Object.values(Settings);
+
+  const promises = settingIds.map(async (id) => {
+    const defaultTime = new Date();
+    defaultTime.setHours(10, 0, 0, 0);
+
+    const setting = await prisma.settings.upsert({
+      where: { id },
+      update: {},
+      create: {
+        id,
+        description: settingDescriptions[id] || "Описание не указано",
+        value: defaultTime,
+      },
+    });
+
+    return setting;
+  });
+
+  const settings = await Promise.all(promises);
+
+  return settings;
+};
 
 const groupDescriptions: Record<string, string> = {
   [UserGroup.Admin]: "Администратор системы",
@@ -37,6 +66,7 @@ const upsertGroups = async () => {
 try {
   await prisma.$connect();
   await upsertGroups();
+  await upsertSettings();
   await prisma.$disconnect();
 } catch {
   await prisma.$disconnect();

@@ -1,5 +1,5 @@
 import { Composer, InlineKeyboard } from "grammy";
-import { UserGroup } from "../../const.js";
+import { UserGroup, Settings } from "../../const.js";
 import { Context } from "../context.js";
 import { sendReminderToOne } from "../services/schedule.js";
 import { userIdData } from "../callback-data/user-id-data.js";
@@ -26,6 +26,8 @@ import {
   showQuestionDetails,
   showGroupSelectionForUser,
   showQuestionsPanel,
+  manageNotificationTimePanel,
+  showTimeSelectionPanel,
 } from "../services/admin/index.js";
 import {
   accessUserData,
@@ -54,9 +56,19 @@ import {
   manageUserData,
   confirmSendNewsletterData,
   startEditRoleData,
+  updateNotificationTimeActionData,
 } from "../callback-data/index.js";
 import { addBackButton } from "../helpers/keyboard.js";
 import { logHandle } from "../helpers/logging.js";
+
+export const TimeActions = {
+  init: "init",
+  incrHour: "incrHour",
+  incrMinutes: "incrMinutes",
+  decrHours: "decrHours",
+  decrMinutes: "decrMinutes",
+  save: "save"
+} as const;
 
 const Scene = {
   enterId: "enter_id",
@@ -485,13 +497,19 @@ feature.callbackQuery(
   logHandle("callback-query-find-user"),
   userSearch,
 );
+
 feature.callbackQuery(
   setNotificationTimeData.filter(),
   logHandle("callback-query-set-notification-time"),
-  async (ctx) => {
-    await ctx.reply("Настройка времени оповещения не реализована");
-  },
+  manageNotificationTimePanel,
 );
+
+feature.callbackQuery(
+  updateNotificationTimeActionData.filter(),
+  logHandle("callback-update-notification-time"),
+  showTimeSelectionPanel,
+);
+
 feature.callbackQuery(
   configureQuestionsData.filter(),
   logHandle("callback-query-configure-questions"),
@@ -666,7 +684,7 @@ const routeHandlers = {
     await ctx.reply(`Вопрос создан с ID: ${question.id}`);
     await showQuestionsPanel(ctx, 0, false);
   },
-};
+}
 
 composer.route(router, routeHandlers);
 

@@ -1,5 +1,5 @@
 import { Context } from "#root/bot/context.js";
-import { InlineKeyboard } from "grammy";
+import { CallbackQueryContext, InlineKeyboard } from "grammy";
 import {
   addBackButton,
   paginateItems,
@@ -18,8 +18,11 @@ import {
   startEditRoleData,
   backToQuestionsData,
   showQuestionsPageData,
+  updateNotificationTimeActionData,
 } from "#root/bot/callback-data/index.js";
 import { adminPanelTexts } from "./text.js";
+import { TimeActions } from "#root/bot/features/admin.js";
+import debounce from "lodash/debounce.js";
 
 function createAdminKeyboard(): InlineKeyboard {
   return new InlineKeyboard()
@@ -122,6 +125,194 @@ export async function manageRolesPanel(ctx: Context) {
     });
   } catch (error) {
     ctx.logger.error(`Error in manageRolesPanel: ${error}`);
+  }
+}
+
+export async function manageNotificationTimePanel(ctx: Context) {
+  ctx.logger.trace("Manage notification time panel invoked");
+
+  try {
+    const currentTime = await ctx.repositories.settings.getNotificationTime();
+    const [hour, minute] = currentTime.split(":").map(Number);
+
+    const keyboard = new InlineKeyboard();
+    keyboard
+      .text("Да, хочу поменять", updateNotificationTimeActionData.pack({
+        action: TimeActions.init,
+        hour,
+        minute
+      }))
+      .row()
+      .text("Нет, оставить текущее время", manageSystemData.pack({}));
+
+    await ctx.editMessageText(
+      `Текущее время оповещений: ${currentTime}\n\nВы хотите поменять текущее значение?`,
+      { reply_markup: keyboard }
+    ).catch(error => {
+      if (!error.description?.includes("message is not modified")) {
+        throw error;
+      }
+    });
+
+  } catch (error) {
+    ctx.logger.error(`Error in manageNotificationTime: ${error}`);
+  }
+}
+
+const userTimeState = new Map<number, { hour: number, minute: number }>();
+const individualUserDebounceMap = new Map<number, ReturnType<typeof debounce>>();
+const pendingUpdates = new Map<number, AbortController>();
+//learn.javascript.ru/closures
+
+export async function showTimeSelectionPanel(ctx: CallbackQueryContext<Context>) {
+  ctx.logger.trace("Show time selection panel invoked");
+
+  try {
+    const userId = ctx.from.id;
+    const callbackData = ctx.callbackQuery.data;
+    const { action, hour, minute } = updateNotificationTimeActionData.unpack(callbackData);
+
+    if (action === TimeActions.init || !userTimeState.has(userId)) {
+      userTimeState.set(userId, { hour, minute });
+    }
+
+    const state = userTimeState.get(userId)!;
+    let newHour = state.hour;
+    let newMinute = state.minute;
+
+    switch (action) {
+      case TimeActions.init:
+        break;
+
+      case TimeActions.incrHour:
+        newHour = (state.hour + 1) % 24;
+        break;
+
+      case TimeActions.incrMinutes:
+        newMinute = (state.minute + 5) % 60;
+        if (newMinute < state.minute) {
+          newHour = (state.hour + 1) % 24;
+        }
+        break;
+
+      case TimeActions.decrHours:
+        newHour = (state.hour - 1 + 24) % 24;
+        break;
+
+      case TimeActions.decrMinutes:
+        newMinute = (state.minute - 5 + 60) % 60;
+        if (newMinute > state.minute) {
+          newHour = (state.hour - 1 + 24) % 24;
+        }
+        break;
+
+      case TimeActions.save:
+        const newTime = `${state.hour.toString().padStart(2, '0')}:${state.minute.toString().padStart(2, '0')}`;
+        userTimeState.delete(userId);
+        individualUserDebounceMap.delete(userId);
+        await updateNotificationTime(ctx, newTime);
+        return;
+
+      default:
+        throw new Error(`Unexpected action: ${action}`);
+    }
+
+    userTimeState.set(userId, { hour: newHour, minute: newMinute });
+
+    const prevController = pendingUpdates.get(userId);
+    if (prevController) {
+      prevController.abort();
+    }
+
+    let debouncedUpdate = individualUserDebounceMap.get(userId);
+    if (!debouncedUpdate) {
+
+      debouncedUpdate = debounce(async () => {
+        const currentState = userTimeState.get(userId);
+        if (!currentState) return;
+
+        const controller = new AbortController();
+        pendingUpdates.set(userId, controller);
+
+        try {
+          const hourDisplay = currentState.hour.toString().padStart(2, '0');
+          const minuteDisplay = currentState.minute.toString().padStart(2, '0');
+          const keyboard = new InlineKeyboard();
+
+          const packCBD = (actionKey: string) => updateNotificationTimeActionData.pack({
+            action: actionKey,
+            hour: currentState.hour,
+            minute: currentState.minute
+          });
+
+          keyboard
+            .text("↑", packCBD(TimeActions.incrHour))
+            .text(" ", " ")
+            .text("↑", packCBD(TimeActions.incrMinutes))
+            .row()
+            .text(hourDisplay, " ")
+            .text(":", " ")
+            .text(minuteDisplay, " ")
+            .row()
+            .text("↓", packCBD(TimeActions.decrHours))
+            .text(" ", " ")
+            .text("↓", packCBD(TimeActions.decrMinutes))
+            .row()
+            .text("Сохранить", packCBD(TimeActions.save))
+            .row();
+
+          addBackButton(keyboard, manageSystemData.pack({}));
+
+          if (!controller.signal.aborted) {
+            await ctx.editMessageText(
+              `Выберите время оповещения: ${hourDisplay}:${minuteDisplay}`,
+              { reply_markup: keyboard }
+            );
+          }
+        } catch (error: any) {
+          if (!error.description?.includes("message is not modified") && !controller.signal.aborted) {
+            ctx.logger.error(`Debounce update error: ${error}`);
+          }
+        } finally {
+          if (pendingUpdates.get(userId) === controller) {
+            pendingUpdates.delete(userId);
+          }
+        }
+      }, 150, {
+        leading: true,
+        maxWait: 500
+      });
+
+      individualUserDebounceMap.set(userId, debouncedUpdate);
+    }
+
+    debouncedUpdate();
+
+  } catch (error) {
+    ctx.logger.error(`Error in showTimeSelectionPanel: ${error}`);
+  }
+}
+
+export async function updateNotificationTime(ctx: Context, newTime: string) {
+  ctx.logger.trace(`Updating notification time to: ${newTime}`);
+
+  try {
+    await ctx.repositories.settings.updateNotificationTime(newTime);
+    const keyboard = new InlineKeyboard();
+
+    addBackButton(keyboard, manageSystemData.pack({}));
+
+    await ctx.editMessageText(
+      `Время оповещения изменено на ${newTime}`,
+      { reply_markup: keyboard }
+    ).catch(error => {
+      if (!error.description?.includes("message is not modified")) {
+        throw error;
+      }
+    });
+  } catch (error) {
+    ctx.logger.error(`Error in updateNotificationTime: ${error}`);
+    await ctx.reply("Ошибка при обновлении времени оповещения");
   }
 }
 

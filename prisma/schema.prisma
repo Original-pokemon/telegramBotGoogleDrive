@@ -62,3 +62,11 @@ model Question {
 
   @@map("question")
 }
+
+model Settings {
+  id          String   @id
+  description String
+  value       DateTime @db.Timestamptz(3)
+
+  @@map("settings")
+}
