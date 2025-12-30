@@ -1,17 +1,22 @@
 import { PrismaClient } from "@prisma/client";
-import { UserGroup, Settings } from "../src/const.js";
+import { UserGroup } from "../src/const.js";
 
 const prisma = new PrismaClient();
 
+const SettingsIds = {
+  NotificationTime: "notificationTime",
+  OtherSetting: "otherSetting"
+}
+
 const settingDescriptions: Record<string, string> = {
-  [Settings.NotificationTime]: "Время оповещения",
-  [Settings.OtherSetting]: "Описание настройки123",
+  [SettingsIds.NotificationTime]: "Время оповещения",
+  [SettingsIds.OtherSetting]: "Описание настройки123",
 };
 
 const upsertSettings = async () => {
-  const settingIds = Object.values(Settings);
+  const settingIdsValues = Object.values(SettingsIds);
 
-  const promises = settingIds.map(async (id) => {
+  const promises = settingIdsValues.map(async (id) => {
     const defaultTime = new Date();
     defaultTime.setHours(10, 0, 0, 0);
     const setting = await prisma.settings.upsert({
