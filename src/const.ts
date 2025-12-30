@@ -8,4 +8,5 @@ export const UserGroup = {
 
 export const Settings = {
   NotificationTime: "notificationTime",
+  OtherSetting: "otherSetting"
 } as const

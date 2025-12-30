@@ -40,9 +40,9 @@ export default class SettingsRepository extends Repository {
         return DEFAULT_TIME;
       }
 
-      // Извлекаем часы и минуты из объекта Date (форматируем в HH:mm)
-      const hours = String(setting.value.getHours()).padStart(2, '0');
-      const minutes = String(setting.value.getMinutes()).padStart(2, '0');
+      const dateValue = new Date(setting.value);
+      const hours = String(dateValue.getUTCHours()).padStart(2, '0');
+      const minutes = String(dateValue.getUTCMinutes()).padStart(2, '0');
       const formattedTime = `${hours}:${minutes}`;
 
       logger.debug(`Successfully retrieved notification time: ${formattedTime}`);
@@ -81,12 +81,14 @@ export default class SettingsRepository extends Repository {
   async updateSetting(id: string, value: string): Promise<Settings> {
     logger.trace(`Attempting to update setting with id: ${id}`);
     try {
+
       const updatedSetting = await this.client.settings.update({
         where: { id },
         data: {
-          value: isValidTimeFormat(value) ? this.timeStringToDate(value) : new Date(value)
+          value,
         },
       });
+
       logger.debug(`Successfully updated setting with id: ${id}`);
       return updatedSetting;
     } catch (error: unknown) {
@@ -109,12 +111,15 @@ export default class SettingsRepository extends Repository {
     }
 
     try {
+      const dateValue = this.timeStringToDate(time);
+
       const updatedSetting = await this.client.settings.update({
         where: { id: "notificationTime" },
         data: {
-          value: this.timeStringToDate(time) // Конвертируем строку в Date
+          value: dateValue.toISOString(),
         },
       });
+      logger.debug(`Successfully updated notification time to: ${time}`);
       return updatedSetting;
     } catch (error: unknown) {
       if (error instanceof Error) {
@@ -142,7 +147,7 @@ export default class SettingsRepository extends Repository {
         data: {
           id,
           description,
-          value: isValidTimeFormat(value) ? this.timeStringToDate(value) : new Date(value)
+          value,
         },
       });
       logger.debug(`Successfully created setting with id: ${id}`);
@@ -179,10 +184,10 @@ export default class SettingsRepository extends Repository {
   private timeStringToDate(time: string): Date {
     const [hours, minutes] = time.split(":").map(Number);
     const date = new Date();
-    date.setHours(hours, minutes, 0, 0);
+    date.setUTCHours(hours, minutes, 0, 0);
+
     return date;
   }
-
 }
 
 function isValidTimeFormat(time: string): boolean {

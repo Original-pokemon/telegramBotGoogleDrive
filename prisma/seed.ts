@@ -5,6 +5,7 @@ const prisma = new PrismaClient();
 
 const settingDescriptions: Record<string, string> = {
   [Settings.NotificationTime]: "Время оповещения",
+  [Settings.OtherSetting]: "Описание настройки123",
 };
 
 const upsertSettings = async () => {
@@ -13,14 +14,13 @@ const upsertSettings = async () => {
   const promises = settingIds.map(async (id) => {
     const defaultTime = new Date();
     defaultTime.setHours(10, 0, 0, 0);
-
     const setting = await prisma.settings.upsert({
       where: { id },
       update: {},
       create: {
         id,
         description: settingDescriptions[id] || "Описание не указано",
-        value: defaultTime,
+        value: (id === "notificationTime") ? defaultTime.toISOString() : "Значение не указано",
       },
     });
 
