@@ -1,5 +1,5 @@
 import { Composer, InlineKeyboard } from "grammy";
-import { UserGroup, Settings } from "../../const.js";
+import { UserGroup } from "../../const.js";
 import { Context } from "../context.js";
 import { sendReminderToOne } from "../services/schedule.js";
 import { userIdData } from "../callback-data/user-id-data.js";

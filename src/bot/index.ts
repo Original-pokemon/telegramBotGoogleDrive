@@ -33,7 +33,6 @@ import { createConversationFeature } from "./conversations/conversations.js";
 import { userFeature } from "./features/user.js";
 import { unhandledFeature } from "./features/unhandled.js";
 import { errorHandler } from "./services/error.js";
-import { Settings } from "#root/const.js";
 import SettingsRepository from "./repositories/settings.repository.js";
 
 interface Dependencies {
