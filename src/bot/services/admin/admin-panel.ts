@@ -1,5 +1,5 @@
 import { Context } from "#root/bot/context.js";
-import { InlineKeyboard } from "grammy";
+import { CallbackQueryContext, GrammyError, InlineKeyboard } from "grammy";
 import {
   addBackButton,
   paginateItems,
@@ -18,8 +18,10 @@ import {
   startEditRoleData,
   backToQuestionsData,
   showQuestionsPageData,
+  updateNotificationTimeActionData,
 } from "#root/bot/callback-data/index.js";
 import { adminPanelTexts } from "./text.js";
+import { TimeActions } from "#root/bot/features/admin.js";
 
 function createAdminKeyboard(): InlineKeyboard {
   return new InlineKeyboard()
@@ -122,6 +124,171 @@ export async function manageRolesPanel(ctx: Context) {
     });
   } catch (error) {
     ctx.logger.error(`Error in manageRolesPanel: ${error}`);
+  }
+}
+
+export async function manageNotificationTimePanel(ctx: Context) {
+  ctx.logger.trace("Manage notification time panel invoked");
+
+  try {
+    const currentTime = await ctx.repositories.settings.getNotificationTime();
+    ctx.logger.debug(`Current time retrieved: "${currentTime}"`);
+
+    const [hourStr, minuteStr] = currentTime.split(":");
+    const hour = parseInt(hourStr, 10);
+    const minute = parseInt(minuteStr, 10);
+
+    // Проверяем что hour и minute являются валидными числами
+    if (isNaN(hour) || isNaN(minute)) {
+      ctx.logger.error(`Invalid time format from DB: "${currentTime}"`);
+      await ctx.reply("Ошибка: неверный формат времени в настройках. Пожалуйста, обратитесь к администратору.");
+      return;
+    }
+
+    ctx.logger.debug(`Parsed time - hour: ${hour}, minute: ${minute}`);
+
+    const keyboard = new InlineKeyboard();
+    keyboard
+      .text("Да, хочу поменять", updateNotificationTimeActionData.pack({
+        action: TimeActions.init,
+        hour,
+        minute
+      }))
+      .row()
+      .text("Нет, оставить текущее время", manageSystemData.pack({}));
+
+    await ctx.editMessageText(
+      `Текущее время оповещений: ${currentTime}\n\nВы хотите поменять текущее значение?`,
+      { reply_markup: keyboard }
+    ).catch(error => {
+      if (!error.description?.includes("message is not modified")) {
+        throw error;
+      }
+    });
+
+  } catch (error) {
+    ctx.logger.error(`Error in manageNotificationTime: ${error}`);
+    if (error instanceof Error) {
+      ctx.logger.error(`Stack: ${error.stack}`);
+    }
+  }
+}
+
+export async function showTimeSelectionPanel(ctx: CallbackQueryContext<Context>) {
+  ctx.logger.trace("Show time selection panel invoked");
+
+  try {
+
+    const callbackData = ctx.callbackQuery.data;
+    if (!callbackData) return;
+    const { action, hour, minute } = updateNotificationTimeActionData.unpack(callbackData);
+
+    let newHour = hour;
+    let newMinute = minute;
+
+    switch (action) {
+      case TimeActions.init:
+        break;
+
+      case TimeActions.incrHour:
+        newHour = (hour + 1) % 24;
+        break;
+
+      case TimeActions.incrMinutes:
+        newMinute = (minute + 5) % 60;
+        if (newMinute < minute) {
+          newHour = (hour + 1) % 24;
+        }
+        break;
+
+      case TimeActions.decrHours:
+        newHour = (hour - 1 + 24) % 24;
+        break;
+
+      case TimeActions.decrMinutes:
+        newMinute = (minute - 5 + 60) % 60;
+        if (newMinute > minute) {
+          newHour = (hour - 1 + 24) % 24;
+        }
+        break;
+
+      case TimeActions.save:
+        const newTime = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+        await updateNotificationTime(ctx, newTime);
+        return;
+
+      default:
+        throw new Error(`Unexpected action: ${action}`);
+    }
+
+    if (newHour === hour && newMinute === minute && action !== TimeActions.init) {
+      await ctx.answerCallbackQuery().catch(() => { });
+    }
+
+    const hourDisplay = newHour.toString().padStart(2, '0');
+    const minuteDisplay = newMinute.toString().padStart(2, '0');
+    const keyboard = new InlineKeyboard();
+
+    const packCBD = (actionKey: string) => updateNotificationTimeActionData.pack({
+      action: actionKey,
+      hour: newHour,
+      minute: newMinute
+    });
+
+    keyboard
+      .text("↑", packCBD(TimeActions.incrHour))
+      .text(" ", " ")
+      .text("↑", packCBD(TimeActions.incrMinutes))
+      .row()
+      .text(hourDisplay, " ")
+      .text(":", " ")
+      .text(minuteDisplay, " ")
+      .row()
+      .text("↓", packCBD(TimeActions.decrHours))
+      .text(" ", " ")
+      .text("↓", packCBD(TimeActions.decrMinutes))
+      .row()
+      .text("Сохранить", packCBD(TimeActions.save))
+      .row();
+
+    addBackButton(keyboard, manageSystemData.pack({}));
+
+    try {
+      await ctx.editMessageText(
+        `Выберите время оповещения: ${hourDisplay}:${minuteDisplay}`,
+        { reply_markup: keyboard }
+      );
+    } catch (error: unknown) {
+      if (error instanceof GrammyError) {
+        ctx.logger.error(error);
+        return
+      }
+    }
+  } catch (error) {
+    ctx.logger.error(`Error in showTimeSelectionPanel: ${error}`);
+  }
+}
+
+export async function updateNotificationTime(ctx: Context, newTime: string) {
+  ctx.logger.trace(`Updating notification time to: ${newTime}`);
+
+  try {
+    await ctx.repositories.settings.updateNotificationTime(newTime);
+    const keyboard = new InlineKeyboard();
+
+    addBackButton(keyboard, manageSystemData.pack({}));
+
+    await ctx.editMessageText(
+      `Время оповещения изменено на ${newTime}`,
+      { reply_markup: keyboard }
+    ).catch(error => {
+      if (error instanceof Error) {
+        return;
+      }
+    });
+  } catch (error) {
+    ctx.logger.error(`Error in updateNotificationTime: ${error}`);
+    await ctx.reply("Ошибка при обновлении времени оповещения");
   }
 }
 

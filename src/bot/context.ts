@@ -12,6 +12,7 @@ import QuestionRepository from "./repositories/question.repository.js";
 import UsersRepository from "./repositories/user.repository.js";
 import PhotoFolderRepository from "./repositories/photo-folder.repository.js";
 import GroupRepository from "./repositories/group.repository.js";
+import SettingsRepository from "./repositories/settings.repository.js";
 import { AnswerType } from "./types/answer.js";
 
 export type MemorySessionData = {
@@ -31,6 +32,7 @@ export type ExternalSessionData = {
   newQuestionText?: string;
   newQuestionRequire?: boolean;
   editQuestionId?: number;
+  editNotificationTime?: string;
 };
 
 export type SessionData = {
@@ -44,6 +46,7 @@ export type RepositoryType = {
   groups: GroupRepository;
   questions: QuestionRepository;
   photoFolders: PhotoFolderRepository;
+  settings: SettingsRepository;
 };
 
 type ExtendedContextFlavor = {
@@ -56,9 +59,9 @@ export type Context = ParseModeFlavor<
   FileFlavor<
     HydrateFlavor<
       DefaultContext &
-        ExtendedContextFlavor &
-        SessionFlavor<SessionData> &
-        ConversationFlavor
+      ExtendedContextFlavor &
+      SessionFlavor<SessionData> &
+      ConversationFlavor
     >
   >
 >;
