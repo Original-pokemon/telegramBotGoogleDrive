@@ -52,6 +52,11 @@ function createManageSystemKeyboard(): InlineKeyboard {
   return addBackButton(keyboard, UserGroup.Admin);
 }
 
+import {
+  scheduleEvents,
+  NOTIFICATION_TIME_CHANGED,
+} from "../schedule-events.js";
+
 export async function adminPanel(ctx: Context) {
   ctx.logger.trace("Admin panel command invoked");
 
@@ -274,6 +279,7 @@ export async function updateNotificationTime(ctx: Context, newTime: string) {
 
   try {
     await ctx.repositories.settings.updateNotificationTime(newTime);
+    scheduleEvents.emit(NOTIFICATION_TIME_CHANGED);
     const keyboard = new InlineKeyboard();
 
     addBackButton(keyboard, manageSystemData.pack({}));
