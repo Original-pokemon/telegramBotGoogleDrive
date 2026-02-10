@@ -9,7 +9,7 @@ export const checkAnswerTime = ({
 
   if (typeof lastMessageDate === "number") {
     const timeDifference = msg.date - lastMessageDate;
-    return timeDifference > 5 * 60; // Проверка, прошло ли более 5 минут
+    return timeDifference > 3 * 60 * 60; // Проверка, прошло ли более 3 часов
   }
 
   return false; // Если lastMessageDate не число, возвращаем false
