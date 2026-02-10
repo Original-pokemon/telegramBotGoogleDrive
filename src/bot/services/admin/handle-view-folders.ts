@@ -30,6 +30,6 @@ export const deleteOldFolders = async (repositories: RepositoryType) => {
 
     logger.info(`delete ${folders.length} old folders`);
   } catch (error) {
-    logger.error("throw error when found folders", error);
+    logger.error({ err: error }, "throw error when found folders");
   }
 };

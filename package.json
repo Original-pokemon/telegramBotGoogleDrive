@@ -14,8 +14,8 @@
     "build": "tsc --noEmit false",
     "format": "eslint . --fix",
     "initPrisma": "npx prisma migrate dev --name init && npx prisma db seed",
-    "dev": "tsc-watch --onSuccess \"tsx ./src/main.ts\"",
-    "start": "node dist/main.js"
+    "dev": "tsc-watch --onSuccess \"tsx --import ./src/polyfill-slow-buffer.ts ./src/main.ts\"",
+    "start": "node --import ./dist/src/polyfill-slow-buffer.js dist/src/main.js"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

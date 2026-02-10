@@ -13,7 +13,7 @@ export function createScheduleFeature(
   const composer = new Composer<Context>();
 
   schedule.scheduleJob(
-    { hour: 0, minute: 0, tz: "Europe/Moscow" },
+    { hour: 14, minute: 18, tz: "Europe/Moscow" },
     async () => {
       await deleteOldFolders(repositories);
 

@@ -27,12 +27,15 @@ export const sendRemindersToAll = async (
       try {
         await bot.api.sendMessage(id, REMINDER_MSG_TEXT, markup);
       } catch (error) {
-        logger.error("Error sending message to user:", id, error);
+        logger.error(
+          { err: error, userId: id },
+          "Error sending message to user",
+        );
       }
     });
     await Promise.allSettled(promises);
   } catch (error) {
-    logger.error("Error sending reminders to all users:", error);
+    logger.error({ err: error }, "Error sending reminders to all users");
   }
 };
 
@@ -42,14 +45,14 @@ export async function sendReminderToOne(ctx: CallbackQueryContext<Context>) {
     try {
       await ctx.deleteMessage();
     } catch (error) {
-      ctx.logger.debug("Error deleting message:", error);
+      ctx.logger.debug({ err: error }, "Error deleting message");
     }
 
     await ctx.api.sendMessage(userId, REMINDER_MSG_TEXT, markup);
 
     await ctx.reply("Уведомление отправленно!");
   } catch (error) {
-    ctx.logger.error("Error sending reminder to user:", error);
+    ctx.logger.error({ err: error }, "Error sending reminder to user");
   }
 }
 
@@ -60,7 +63,7 @@ export async function postponeReminder(ctx: CallbackQueryContext<Context>) {
     try {
       await ctx.deleteMessage();
     } catch (error) {
-      ctx.logger.debug("Error deleting message:", error);
+      ctx.logger.debug({ err: error }, "Error deleting message");
     }
 
     await new Promise((resolve) => {
@@ -69,6 +72,6 @@ export async function postponeReminder(ctx: CallbackQueryContext<Context>) {
 
     await ctx.reply(REMINDER_MSG_TEXT, markup);
   } catch (error) {
-    ctx.logger.error("Error deleting message:", error);
+    ctx.logger.error({ err: error }, "Error deleting message");
   }
 }

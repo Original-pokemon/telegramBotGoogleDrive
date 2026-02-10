@@ -66,7 +66,7 @@ class GoogleRepository {
         if (typedError.code === 404) {
           logger.error("Main folder not found or access is denied.");
         } else {
-          logger.error("Error accessing the main folder:", error.message);
+          logger.error({ err: error }, "Error accessing the main folder");
         }
         throw error;
       } else {
@@ -132,7 +132,7 @@ class GoogleRepository {
 
       logger.debug(`Folder with ID ${folderId} successfully deleted.`);
     } catch (error) {
-      logger.error("Error deleting folder:", error);
+      logger.error({ err: error }, "Error deleting folder");
       throw error;
     }
   }
@@ -199,7 +199,7 @@ class GoogleRepository {
 
       return data.id;
     } catch (error) {
-      logger.error("Error uploading file:", error);
+      logger.error({ err: error }, "Error uploading file");
       throw error;
     }
   }
@@ -238,7 +238,7 @@ class GoogleRepository {
       );
       return results;
     } catch (error) {
-      logger.error("Error recursively listing files:", error);
+      logger.error({ err: error }, "Error recursively listing files");
       throw error;
     }
   }
@@ -270,7 +270,7 @@ class GoogleRepository {
       );
       return data;
     } catch (error) {
-      logger.error("Error getting permission:", error);
+      logger.error({ err: error }, "Error getting permission");
       throw error;
     }
   }
@@ -307,7 +307,7 @@ class GoogleRepository {
       );
       return data;
     } catch (error) {
-      logger.error("Error updating permission:", error);
+      logger.error({ err: error }, "Error updating permission");
       throw error;
     }
   }
@@ -337,7 +337,7 @@ class GoogleRepository {
         `Permission with ID: ${permissionId} for file with ID: ${fileId} deleted successfully.`,
       );
     } catch (error) {
-      logger.error("Error deleting permission:", error);
+      logger.error({ err: error }, "Error deleting permission");
       throw error;
     }
   }
@@ -426,7 +426,10 @@ class GoogleRepository {
           logger.debug(`Скачан файл: ${filePath}`);
           return { success: true, file };
         } catch (error) {
-          logger.error(`Ошибка при скачивании файла ${file.name}:`, error);
+          logger.error(
+            { err: error },
+            `Ошибка при скачивании файла ${file.name}`,
+          );
           return { success: false, file };
         }
       };
@@ -455,7 +458,7 @@ class GoogleRepository {
         skippedFiles,
       };
     } catch (error) {
-      logger.error("Ошибка при скачивании папки:", error);
+      logger.error({ err: error }, "Ошибка при скачивании папки");
       throw error;
     }
   }
@@ -483,8 +486,8 @@ class GoogleRepository {
       return undefined;
     } catch (error) {
       logger.error(
-        `Ошибка при получении родительской папки для ${fileId}:`,
-        error,
+        { err: error },
+        `Ошибка при получении родительской папки для ${fileId}`,
       );
       return undefined;
     }
@@ -530,7 +533,7 @@ class GoogleRepository {
         });
       }
     } catch (error) {
-      logger.error(`Ошибка при скачивании файла ${fileId}:`, error);
+      logger.error({ err: error }, `Ошибка при скачивании файла ${fileId}`);
       throw error;
     }
   }
@@ -609,7 +612,7 @@ class GoogleRepository {
           .pipe(destination);
       });
     } catch (error) {
-      logger.error(`Ошибка при экспорте Google Doc ${fileId}:`, error);
+      logger.error({ err: error }, `Ошибка при экспорте Google Doc ${fileId}`);
       throw error;
     }
   }

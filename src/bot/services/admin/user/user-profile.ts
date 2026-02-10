@@ -1,10 +1,7 @@
 import {
-  accessUserData,
-  promoteUserData,
   sendReminderData,
   userIdData,
   viewUserFoldersData,
-  changeUserGroupData,
   backToGroupsData,
   manageUserData,
 } from "#root/bot/callback-data/index.js";
@@ -35,16 +32,6 @@ async function getUserInfo(
   const roleDescription = group ? group.description : group_id;
 
   return `Информация о пользователе:\nДата регистрации: ${created_date}\nID: ${id}\nНикнейм: ${name}\nРоль: ${roleDescription}\nЛичная папка: ${user_folder}\nКоличество папок: ${folderCount}`;
-}
-
-function createAdminPromotionButton(userId: string, isAdmin: boolean) {
-  const text = isAdmin ? "Разжаловать" : "Повысить до администратора";
-  return { text, callback_data: promoteUserData.pack({ userId }) };
-}
-
-function createAccessButton(userId: string, isWaitingConfirmation: boolean) {
-  const text = isWaitingConfirmation ? "Выдать доступ" : "Ограничить доступ";
-  return { text, callback_data: accessUserData.pack({ userId }) };
 }
 
 function createReminderButton(userId: string) {

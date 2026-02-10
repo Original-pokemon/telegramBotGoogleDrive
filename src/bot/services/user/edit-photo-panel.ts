@@ -10,7 +10,7 @@ export async function editPhotoPanel(ctx: CallbackQueryContext<Context>) {
     try {
       await ctx.deleteMessage();
     } catch (error) {
-      logger.debug("Error deleting message:", error);
+      logger.debug({ err: error }, "Error deleting message");
     }
 
     if (scene !== "end_msg") {

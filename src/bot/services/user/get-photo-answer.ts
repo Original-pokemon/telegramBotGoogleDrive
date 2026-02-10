@@ -21,7 +21,7 @@ export async function getPhotoAnswer(ctx: Context) {
       try {
         await ctx.deleteMessage();
       } catch (error) {
-        ctx.logger.debug("Error deleting message:", error);
+        ctx.logger.debug({ err: error }, "Error deleting message");
       }
       await handleRestartCheck(ctx);
       return;
@@ -33,7 +33,7 @@ export async function getPhotoAnswer(ctx: Context) {
       try {
         await ctx.deleteMessage();
       } catch (error) {
-        ctx.logger.debug("Error deleting message:", error);
+        ctx.logger.debug({ err: error }, "Error deleting message");
       }
       await ctx.reply("Пожалуйста, перезапустите проверку");
       return;

@@ -19,7 +19,7 @@ export async function showPhotos(ctx: Context) {
       try {
         await ctx.deleteMessage();
       } catch (error) {
-        ctx.logger.debug("Error deleting message:", error);
+        ctx.logger.debug({ err: error }, "Error deleting message");
       }
       return;
     }
@@ -46,7 +46,7 @@ export async function showPhotos(ctx: Context) {
     try {
       await ctx.deleteMessage();
     } catch (error) {
-      ctx.logger.debug("Error deleting message:", error);
+      ctx.logger.debug({ err: error }, "Error deleting message");
     }
 
     return true;

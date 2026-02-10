@@ -61,7 +61,7 @@ export default function authMiddleware(): Middleware<Context> {
 
       await next();
     } catch (error) {
-      logger.error("auth.mv: \n", error);
+      logger.error({ err: error }, "auth.mv");
       throw error;
     }
   };

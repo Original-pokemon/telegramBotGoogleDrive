@@ -1,13 +1,12 @@
 {
+  "ignorePatterns": ["dist", "node_modules"],
   "env": {
     "es2021": true,
     "node": true
   },
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
-    "project": [
-      "tsconfig.json"
-    ]
+    "project": ["tsconfig.json"]
   },
   "extends": [
     "airbnb-base",
@@ -15,13 +14,23 @@
     "plugin:unicorn/recommended",
     "plugin:prettier/recommended"
   ],
-  "plugins": [
-    "@typescript-eslint",
-    "prettier",
-    "unicorn",
-    "import"
-  ],
+  "plugins": ["@typescript-eslint", "prettier", "unicorn", "import"],
   "rules": {
+    "no-restricted-syntax": [
+      "error",
+      {
+        "selector": "ForInStatement",
+        "message": "for..in loops iterate over the entire prototype chain, which is virtually never what you want. Use Object.{keys,values,entries}, and iterate over the resulting array."
+      },
+      {
+        "selector": "LabeledStatement",
+        "message": "Labels are a form of GOTO; using them makes code confusing and hard to maintain and understand."
+      },
+      {
+        "selector": "WithStatement",
+        "message": "`with` is disallowed in strict mode because it makes code impossible to predict and optimize."
+      }
+    ],
     "consistent-return": "off",
     "import/no-cycle": "off",
     "import/extensions": "off",
@@ -47,16 +56,11 @@
   },
   "settings": {
     "import/parsers": {
-      "@typescript-eslint/parser": [
-        ".ts"
-      ]
+      "@typescript-eslint/parser": [".ts"]
     },
     "import/resolver": {
       "typescript": {
-        "extensions": [
-          ".js",
-          ".ts"
-        ]
+        "extensions": [".js", ".ts"]
       }
     }
   }

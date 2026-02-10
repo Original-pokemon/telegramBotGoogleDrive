@@ -1,4 +1,4 @@
-import { pino } from "pino";
+import { pino, destination } from "pino";
 import { ecsFormat } from "@elastic/ecs-pino-format";
 import path from "node:path";
 import { promises as fs } from "node:fs";
@@ -20,7 +20,7 @@ const createLogger = async () => {
         level: config.LOG_LEVEL,
         ...ecsFormat(),
       },
-      pino.destination(logFilePath),
+      destination(logFilePath),
     );
   }
   return pino({

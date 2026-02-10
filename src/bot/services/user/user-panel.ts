@@ -24,7 +24,7 @@ export async function userPanel(ctx: Context) {
     try {
       await ctx.deleteMessage();
     } catch (error) {
-      logger.debug("Error deleting message:", error);
+      logger.debug({ err: error }, "Error deleting message");
     }
 
     await sendQuestionMessage(ctx, 0);

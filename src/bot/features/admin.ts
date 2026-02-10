@@ -274,8 +274,7 @@ feature.callbackQuery(
       return;
     }
     const currentGroupIds = question.group.map((g) => g.id);
-    let newGroupIds;
-    newGroupIds = currentGroupIds.includes(groupId)
+    const newGroupIds = currentGroupIds.includes(groupId)
       ? currentGroupIds.filter((id) => id !== groupId)
       : [...currentGroupIds, groupId];
     await ctx.repositories.questions.updateQuestion({
